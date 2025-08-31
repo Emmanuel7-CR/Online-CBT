@@ -1,0 +1,262 @@
+/* MAIN CSS */
+/* ===== Base Layout ===== */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  font: 15px "Century Gothic", "Times Roman", sans-serif;
+  min-height: 550px;
+  transition: padding-top 0.15s ease;
+}
+/* Put in your main.css */
+
+
+/* Background image for main section */
+.bg1 {
+  background: url("../image/background-img.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 535px;
+}
+
+/* ===== Fonts ===== */
+@font-face {
+  font-family: 'typo';
+  src: url('../fonts/typo.ttf');
+}
+@font-face {
+  font-family: 'gothic';
+  src: url('../fonts/gothics.ttf');
+}
+
+/* ===== Branding ===== */
+.logo {
+  font-family: 'typo';
+  font-size: 35px;
+  color: #fff;
+  margin: 15px;
+}
+
+.header {
+  background: #202020;
+  height: 70px;
+}
+
+/* ===== Footer ===== */
+.footer {
+  font-size: 15px;
+  text-align: center;
+  border-top: 1px solid #323232;
+  background-color: #202020;
+}
+.footer a {
+  margin: 25px;
+  color: #f8f8ff; /* ghost white */
+  text-shadow: 0 1px 2px #0b5ed7;
+  border-top: none !important;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s;
+}
+.footer a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: #fdfdfd;
+  transition: width 0.3s;
+}
+.footer a:hover,
+.footer a:active {
+  color: #fdfdfd; /* pale white */
+  background: none !important;
+  border-top: none !important;
+}
+.footer a:hover::after,
+.footer a:active::after {
+  width: 100%;
+}
+
+/* ===== Utility ===== */
+.box { padding: 9px; }
+
+
+@media (max-width: 400px) {
+  header .header img {
+    height: 36px;
+    width: 36px;
+  }
+
+  header .logo {
+    font-size: 0.9rem; /* smaller text */
+  }
+
+  header .btn {
+    padding: 0.25rem 0.5rem; /* smaller buttons */
+    font-size: 0.8rem;
+  }
+}
+
+    /* DASH CSS */
+
+    .main-content-spaced { margin-top: 1.5rem; }         /* desktop default */
+    .main-content-extra-space { margin-top: 6.5rem; }  /* when extra needed */
+    @media (max-width: 575.98px) {
+      .main-content-spaced { margin-top: 3.5rem; }
+      .main-content-extra-space { margin-top: 5rem; }
+    }
+    .table-responsive { margin-top: 0; }
+
+    /* Table stack for mobile */
+@media (max-width: 575.98px) {
+  .table-responsive table thead {
+    display: none;
+  }
+  .table-responsive table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    background: #fff;
+    padding: 0.5rem;
+  }
+  .table-responsive table tbody td {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    font-size: 1rem;
+  }
+  .table-responsive table tbody td:before {
+    content: attr(data-label);
+    flex: 0 0 50%;
+    font-weight: 600;
+    color: #003366;
+    margin-right: 0.5rem;
+    min-width: 120px;
+  }
+}
+
+    /* ---------- unified nav link styles (header + offcanvas) ---------- */
+    .navbar-nav .nav-link,
+    .offcanvas .nav-link {
+      position: relative;
+      color: #fff !important;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      text-decoration: none;
+      transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* underline with smooth easing */
+    .navbar-nav .nav-link::after,
+    .offcanvas .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      height: 2px;
+      width: 0%;
+      background-color: #fff;
+      transition: width 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: left;
+    }
+    .navbar-nav .nav-link:hover::after,
+    .navbar-nav .nav-link.active::after,
+    .offcanvas .nav-link:hover::after,
+    .offcanvas .nav-link.active::after { width: 100%; }
+
+    /* remove background highlight, keep subtle color change */
+    .navbar-nav .nav-link:hover,
+    .offcanvas .nav-link:hover,
+    .navbar-nav .nav-link.active,
+    .offcanvas .nav-link.active {
+      background: none !important;
+      color: rgba(236,217,217,0.85) !important;
+    }
+
+    /* offcanvas active visual */
+    .offcanvas .nav-link.active {
+      border-radius: 0.375rem;
+      box-shadow: 0 2px 8px rgba(25,135,84,0.08);
+      font-weight: 700;
+    }
+
+    /* small-brand */
+    .pti-short { display: none; }
+    @media (max-width: 480px) {
+      .pti-full { display: none !important; }
+      .pti-short { display: inline !important; }
+    }
+
+    /* 1250px breakpoint: show inline nav at >=1250, toggler <=1249 */
+    @media (min-width: 1250px) {
+      .d-1250-flex { display:flex !important; }
+      .d-1250-none { display:none !important; }
+    }
+    @media (max-width: 1249px) {
+      .d-1250-flex { display:none !important; }
+      .d-1250-none { display:block !important; }
+    }
+
+    /* Admin dropdown styling preserved */
+    .dropdown-menu[aria-labelledby="adminDropdown"] {
+      background: rgba(25, 135, 84, 0.77) !important;
+      border: none !important;
+      min-width: 140px !important;
+      width: 180px !important;
+      max-width: 90vw;
+    }
+    .dropdown-menu[aria-labelledby="adminDropdown"] .dropdown-item {
+      padding: 0.5rem 1rem;
+      font-weight: 900 !important;
+      font-size: 15px !important;
+      color: #000 !important;
+    }
+    .dropdown-menu[aria-labelledby="adminDropdown"] .dropdown-item:hover,
+    .dropdown-menu[aria-labelledby="adminDropdown"] .dropdown-item:focus {
+      background: none !important;
+      color: inherit !important;
+    }
+    @media (max-width: 575.98px) {
+      .dropdown-menu { min-width:140px !important; width:80vw !important; background:transparent !important; box-shadow:none !important; }
+    }
+
+    /* minor table padding tweak */
+    .table td, .table th { padding: .72rem .75rem; }
+    .card.shadow-sm { border-radius: .75rem; overflow: hidden; }
+.result-card-header,
+.exam-card-header,
+.history-card-header,
+.rank-card-header,
+.question-card-header,
+.student-card-header,
+.feedback-card-header,
+.add-exam-card-header {
+  background: linear-gradient(90deg, #0d3b66 0%, #137e4c 100%);
+  color: #fff;
+  padding: 14px 20px;
+  gap: 10px;
+  align-items: center;
+}
+
+
+
+.custom-option input[type="radio"] { display: none; }
+.custom-option input[type="radio"] + label { cursor: pointer; }
+.custom-option input[type="radio"] + label .card {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+    }
+.custom-option input[type="radio"]:checked + label .card {
+    border-color: #198754;
+    background-color: #f8f9fa;
+      }
+.question-block:not(:first-child) { display: none; }
+
+
+      

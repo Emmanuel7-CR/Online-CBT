@@ -1,0 +1,211 @@
+/*  MAIN CSS */
+/* ===== Base Layout ===== */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  font: 15px "Century Gothic", "Times Roman", sans-serif;
+  min-height: 550px;
+  transition: padding-top 0.15s ease;
+}
+/* Put in your main.css */
+
+
+/* Background image for main section */
+.bg1 {
+  background: url("../image/background-img.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 535px;
+}
+
+/* ===== Fonts ===== */
+@font-face {
+  font-family: 'typo';
+  src: url('../fonts/typo.ttf');
+}
+@font-face {
+  font-family: 'gothic';
+  src: url('../fonts/gothics.ttf');
+}
+
+/* ===== Branding ===== */
+.logo {
+  font-family: 'typo';
+  font-size: 35px;
+  color: #fff;
+  margin: 15px;
+}
+
+.header {
+  background: #202020;
+  height: 70px;
+}
+
+/* ===== Footer ===== */
+.footer {
+  font-size: 15px;
+  text-align: center;
+  border-top: 1px solid #323232;
+  background-color: #202020;
+}
+.footer a {
+  margin: 25px;
+  color: #f8f8ff; /* ghost white */
+  text-shadow: 0 1px 2px #0b5ed7;
+  border-top: none !important;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s;
+}
+.footer a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: #fdfdfd;
+  transition: width 0.3s;
+}
+.footer a:hover,
+.footer a:active {
+  color: #fdfdfd; /* pale white */
+  background: none !important;
+  border-top: none !important;
+}
+.footer a:hover::after,
+.footer a:active::after {
+  width: 100%;
+}
+
+/* ===== Utility ===== */
+.box { padding: 9px; }
+
+
+@media (max-width: 400px) {
+  header .header img {
+    height: 36px;
+    width: 36px;
+  }
+
+  header .logo {
+    font-size: 0.9rem; /* smaller text */
+  }
+
+  header .btn {
+    padding: 0.25rem 0.5rem; /* smaller buttons */
+    font-size: 0.8rem;
+  }
+}
+
+    
+/*FEEDBACK CSS*/
+  ::-webkit-scrollbar { display: none; }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .auth-card { max-width: 520px; width: 100%; }
+
+  .card.bg-glass {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .card.bg-glass .form-control,
+  .card.bg-glass .form-select {
+    background-color: rgba(255,255,255,0.2) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.3);
+    font-weight: 500;
+  }
+  .card.bg-glass .form-control:focus,
+  .card.bg-glass .form-select:focus {
+    background-color: rgba(255,255,255,0.2) !important;
+    border-color: #66afe9;
+    box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
+    color: #fff;
+  }
+  .card.bg-glass label {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+    opacity: 1;
+    text-shadow: none;
+  }
+  .card.bg-glass .invalid-feedback {
+    color: #ffb3b3;
+    font-weight: 500;
+    text-shadow: none;
+  }
+  .input-group-text {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .card.bg-glass h2,
+  .card.bg-glass label,
+  .card.bg-glass .form-control,
+  .card.bg-glass .form-select {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  @media (max-width: 480px) {
+    .pti-full { display: none !important; }
+    .pti-short { display: inline !important; }
+  }
+
+  .navbar .navbar-brand { margin-right: 2rem; }
+  .navbar-nav .nav-link {
+    margin-right: 1rem;
+    position: relative;
+    text-decoration: none;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+    color: white !important;
+  }
+  .navbar .user-info > * { margin-left: 0.5rem; margin-right: 0.5rem; }
+
+  /* Hover + Active underline effect */
+  .navbar-nav .nav-link:hover,
+  .navbar-nav .nav-link.active {
+    background: none !important; /* remove background highlight */
+    color: #ecd9d9c5 !important;   /* highlight text color */
+  }
+.navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 0;
+  height: 2px;
+  background-color: #fff; /* underline color */
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+  .navbar-nav .nav-link.active::after,
+  .navbar-nav .nav-link:hover::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 2px;
+    background-color: #fff; /* underline color */
+  }
+  /* Custom 1000px breakpoint */
+@media (min-width: 1000px) {
+  .d-custom-flex { display: flex !important; }
+  .d-custom-none { display: none !important; }
+}
+
+@media (max-width: 999px) {
+  .d-custom-flex { display: none !important; }
+  .d-custom-none { display: block !important; }
+}
+
+
