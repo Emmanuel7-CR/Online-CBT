@@ -109,6 +109,7 @@ $(function () {
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4">Add Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Remove Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1">Students</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6">Results</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2">Ranking</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3">Feedback</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank">Home</a></li>
@@ -134,6 +135,7 @@ $(function () {
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4"><i class="bi bi-journal-plus me-1"></i> Add Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i> Remove Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i> Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6"><i class="bi bi-list-check me-1"></i> Results</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2"><i class="bi bi-bar-chart me-1"></i> Ranking</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3"><i class="bi bi-chat-dots me-1"></i> Feedback</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank"><i class="bi bi-house-door me-1"></i> Home</a></li>
@@ -309,6 +311,96 @@ $c=0;
 echo '</table></div></div>';
 
 }?>
+
+
+<!-- RESULTS PAGE (q=6) -->
+<?php
+if (@$_GET['q'] == 6) {
+
+    // Optional: restrict to admins only
+    if (!isset($isAdmin) || !$isAdmin) {
+        echo '<div class="main-content-spaced"><div class="card shadow-sm mb-4"><div class="card-body"><div class="alert alert-danger">Access denied. You do not have permission to view this page.</div></div></div></div>';
+    } else {
+
+        // Fetch completed attempts with just the fields we need
+        $sql = "
+            SELECT h.score, h.start_time, h.end_time, h.date, 
+                   u.name AS student_name, q.subject AS exam_title
+            FROM history h
+            JOIN `user` u ON u.email = h.email
+            JOIN quiz q ON q.eid = h.eid
+            WHERE h.completed = 1
+            ORDER BY h.date DESC
+        ";
+
+        $result = mysqli_query($con, $sql) or die('Error fetching results');
+
+        echo '<div class="main-content-spaced">
+                <div class="card shadow-sm mb-4">
+                  <div class="card-header rank-card-header bg-success text-white d-flex align-items-center">
+                    <i class="bi bi-list-check me-2"></i>
+                    <span class="fs-5 fw-bold">Results</span>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover mb-0 align-middle">
+                        <thead class="table-primary">
+                          <tr>
+                            <th>S.N.</th>
+                            <th>Student</th>
+                            <th>Exam</th>
+                            <th>Score</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>';
+
+        $c = 1;
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $student = htmlspecialchars($row['student_name'] ?? '-', ENT_QUOTES);
+                $exam    = htmlspecialchars($row['exam_title'] ?? '-', ENT_QUOTES);
+                $score   = is_null($row['score']) ? '-' : (int)$row['score'];
+
+                // duration
+                $start = !empty($row['start_time']) ? (int)$row['start_time'] : null;
+                $end   = !empty($row['end_time'])   ? (int)$row['end_time']   : null;
+                $duration = '-';
+                if ($start && $end && $end > $start) {
+                    $sec = $end - $start;
+                    $h = floor($sec / 3600);
+                    $m = floor(($sec % 3600) / 60);
+                    $s = $sec % 60;
+                    $duration = sprintf('%02d:%02d:%02d', $h, $m, $s);
+                }
+
+                // exam date
+                $dateStr = !empty($row['date']) ? date("d-m-Y H:i:s", strtotime($row['date'])) : '-';
+
+                echo '<tr>
+                        <td>' . $c++ . '</td>
+                        <td>' . $student . '</td>
+                        <td>' . $exam . '</td>
+                        <td>' . $score . '</td>
+                        <td>' . $duration . '</td>
+                        <td>' . $dateStr . '</td>
+                      </tr>';
+            }
+        } else {
+            echo '<tr><td colspan="6" class="text-center">No completed results found.</td></tr>';
+        }
+
+        echo '          </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>';
+    }
+}
+?>
+
 
 
 <!--feedback start-->

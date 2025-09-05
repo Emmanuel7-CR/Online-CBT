@@ -44,6 +44,12 @@ function isAdmin() {
     return (isset($row['role']) && strtolower($row['role']) === 'admin');
 }
 
+function json_response(array $payload, int $status = 200): void {
+    http_response_code($status);
+    header("Content-Type: application/json; charset=UTF-8");
+    echo json_encode($payload);
+    exit;
+}
 
 
 // helper: safe int
@@ -272,57 +278,37 @@ if ($action === 'exam' || (isset($_GET['q']) && $_GET['q'] === 'exam')) {
     exit;
 }
 
-// -------------------- STUDENT: Per-question submission --------------------
-$eid = $_GET['eid'] ?? '';
+// -------------------- STUDENT: Per-question submission (AJAX-ready) --------------------
+$isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+          && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-if (empty($eid)) {
-    // Stop execution if eid is missing
-    if ($isAjax) {
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Exam ID missing']);
-    } else {
-        header("Location: dash.php"); // redirect to safe page
+if (!function_exists('json_response')) {
+    function json_response(array $payload, int $status = 200): void {
+        http_response_code($status);
+        header("Content-Type: application/json; charset=UTF-8");
+        echo json_encode($payload);
+        exit;
     }
-    exit;
 }
 
-if (!empty($_GET['q']) && $_GET['q'] === 'quiz' && @$_GET['step'] == 2) {
 
-    // Detect AJAX request
-    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-              strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+if (
+    isset($_REQUEST['q']) && $_REQUEST['q'] === 'quiz'
+    && isset($_REQUEST['step']) && (int)$_REQUEST['step'] === 2
+) {
+    // Read from REQUEST so this works for both POST (AJAX) and GET (fallback)
+    $eid           = trim($_REQUEST['eid'] ?? '');
+    $sn            = (int)($_REQUEST['n'] ?? 1);      // 1-based current question number
+    $total         = (int)($_REQUEST['t'] ?? 0);
+    $qid           = trim($_REQUEST['qid'] ?? '');
+    $selected_ans  = trim($_REQUEST['ans'] ?? '');    // optionid string or ''
 
-    // Get request data safely
-    $eid = $_GET['eid'] ?? '';
-    $sn  = isset($_GET['n']) ? (int)$_GET['n'] : 1;
-    $total = isset($_GET['t']) ? (int)$_GET['t'] : 0;
-    $qid = $_GET['qid'] ?? '';
-    $quizTime = $_GET['time'] ?? 0;
-    $selected_ans = $_POST['ans'] ?? '';
-
-    // ======= CRUCIAL: Check eid immediately =======
-    if ($eid === '' || $eid === null) {
-        if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Exam ID missing']);
-        } else {
-            // Redirect to safe page if eid missing
-            header("Location: dash.php");
-        }
-        exit; // stop execution here
+    if ($eid === '') {
+        if ($isAjax) json_response(['error' => 'Missing eid'], 400);
+        header("Location: dash.php"); exit;
     }
 
-    // Record answer in history_answers
-    if ($qid !== '' && $selected_ans !== '') {
-        $stmtAns = $con->prepare("INSERT INTO history_answers (email, eid, qid, answer)
-                                   VALUES (?, ?, ?, ?)
-                                   ON DUPLICATE KEY UPDATE answer=?");
-        $stmtAns->bind_param("sssss", $email, $eid, $qid, $selected_ans, $selected_ans);
-        $stmtAns->execute();
-        $stmtAns->close();
-    }
-
-    // Ensure history exists (insert stub row if missing)
+    // Ensure there is a history row (in-progress)
     $stmt = $con->prepare("SELECT * FROM history WHERE eid=? AND email=? LIMIT 1");
     $stmt->bind_param("ss", $eid, $email);
     $stmt->execute();
@@ -335,31 +321,138 @@ if (!empty($_GET['q']) && $_GET['q'] === 'quiz' && @$_GET['step'] == 2) {
     }
     $stmt->close();
 
-    // If not last question
-    if ($sn < $total) {
+    // Save/overwrite the student's answer for this qid (if provided)
+    if ($qid !== '') {
+        $stmtAns = $con->prepare(
+            "INSERT INTO history_answers (email, eid, qid, answer)
+             VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE answer=VALUES(answer)"
+        );
+        $stmtAns->bind_param("ssss", $email, $eid, $qid, $selected_ans);
+        $stmtAns->execute();
+        $stmtAns->close();
+    }
+
+    // Recompute progress counts (correct, attempted, wrong) from saved answers
+    $correct_count = 0;
+    $attempted = 0;
+
+    // attempted answers
+    $stmtA = $con->prepare(
+        "SELECT COUNT(*) AS cnt FROM history_answers WHERE email=? AND eid=? AND answer <> ''"
+    );
+    $stmtA->bind_param("ss", $email, $eid);
+    $stmtA->execute();
+    $rsA = $stmtA->get_result();
+    if ($rsA && $row = $rsA->fetch_assoc()) {
+        $attempted = (int)$row['cnt'];
+    }
+    $stmtA->close();
+
+    // correct answers
+    $stmtC = $con->prepare(
+        "SELECT COUNT(*) AS cnt
+         FROM history_answers ha
+         JOIN answer a ON a.qid = ha.qid
+         WHERE ha.email=? AND ha.eid=? AND ha.answer = a.ansid"
+    );
+    $stmtC->bind_param("ss", $email, $eid);
+    $stmtC->execute();
+    $rsC = $stmtC->get_result();
+    if ($rsC && $row = $rsC->fetch_assoc()) {
+        $correct_count = (int)$row['cnt'];
+    }
+    $stmtC->close();
+
+    $wrong_count = max(0, $attempted - $correct_count);
+
+    // Persist progress (no final score here)
+    $stmtU = $con->prepare("UPDATE history SET level=?, sahi=?, wrong=?, date=NOW() WHERE email=? AND eid=?");
+    $stmtU->bind_param("iiiss", $attempted, $correct_count, $wrong_count, $email, $eid);
+    $stmtU->execute();
+    $stmtU->close();
+
+    // If this was the last question, finalize score + ranking once
+    if ($sn >= $total && $total > 0) {
+        // fetch marking scheme
+        $marks_per_correct = 1;
+        $penalty_per_wrong = 0;
+        $stmtQ = $con->prepare("SELECT sahi, `wrong` FROM quiz WHERE eid=? LIMIT 1");
+        $stmtQ->bind_param("s", $eid);
+        $stmtQ->execute();
+        $rsQ = $stmtQ->get_result();
+        if ($rsQ && $cfg = $rsQ->fetch_assoc()) {
+            $marks_per_correct = (int)$cfg['sahi'];
+            $penalty_per_wrong = (int)$cfg['wrong'];
+        }
+        $stmtQ->close();
+
+        $finalScore = ($correct_count * $marks_per_correct) - ($wrong_count * $penalty_per_wrong);
+        if ($finalScore < 0) $finalScore = 0;
+
+        // finalize once
+        $con->begin_transaction();
+        try {
+            $stmtF = $con->prepare(
+                "UPDATE history
+                 SET score=?, completed=1, date=NOW()
+                 WHERE email=? AND eid=? AND (completed IS NULL OR completed=0)"
+            );
+            $stmtF->bind_param("iss", $finalScore, $email, $eid);
+            $stmtF->execute();
+            $stmtF->close();
+
+            // update rank (additive)
+            $stmtR = $con->prepare("SELECT score FROM rank WHERE email=? LIMIT 1");
+            $stmtR->bind_param("s", $email);
+            $stmtR->execute();
+            $rsR = $stmtR->get_result();
+
+            if ($rsR->num_rows === 0) {
+                $stmtIns = $con->prepare("INSERT INTO rank (email, score, time) VALUES (?, ?, NOW())");
+                $stmtIns->bind_param("si", $email, $finalScore);
+                $stmtIns->execute();
+                $stmtIns->close();
+            } else {
+                $existing = (int)$rsR->fetch_assoc()['score'];
+                $newScore = max(0, $existing + $finalScore);
+                $stmtUp = $con->prepare("UPDATE rank SET score=?, time=NOW() WHERE email=?");
+                $stmtUp->bind_param("is", $newScore, $email);
+                $stmtUp->execute();
+                $stmtUp->close();
+            }
+            $stmtR->close();
+
+            $con->commit();
+        } catch (Throwable $e) {
+            $con->rollback();
+            // If something goes wrong, still return completed so the UI can move forward.
+        }
+
         if ($isAjax) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'completed' => false,
-                'nextQuestionIndex' => $sn
-            ]);
-            exit;
+            json_response(['completed' => true]);
         } else {
-            header("Location: account.php?q=quiz&step=2&eid=" . rawurlencode($eid) . "&n=" . ($sn + 1) . "&t=" . $total . "&time=" . intval($quizTime));
+            header("Location: account.php?q=result&eid=" . rawurlencode($eid));
             exit;
         }
     }
 
-    // Last question: finalize score (your existing logic)
+    // Not the last question → tell the UI the next zero-based index.
+    // Frontend uses zero-based `currentQuestion`. Current sn is 1-based.
+    // Next zero-based index = current sn (e.g., sn=1 → next index 1).
+    $nextIndex = $sn; 
     if ($isAjax) {
-        header('Content-Type: application/json');
-        echo json_encode(['completed' => true]);
-        exit;
+        json_response([
+            'completed' => false,
+            'nextQuestionIndex' => $nextIndex
+        ]);
     } else {
-        header("Location: account.php?q=result&eid=" . rawurlencode($eid));
+        header("Location: account.php?q=quiz&step=2&eid=" . rawurlencode($eid) . "&n=" . ($sn + 1) . "&t=" . $total);
         exit;
     }
 }
+// -------------------- END student per-question submission --------------------
+
 
 
 
@@ -498,10 +591,16 @@ if (!$alreadyFinished) {
 if (!empty($_SESSION['exam_start']) && isset($_SESSION['exam_start'][$eid])) {
     unset($_SESSION['exam_start'][$eid]);
 }
-echo '<!doctype html><html><head><meta charset="utf-8"><script>';
-echo 'try { localStorage.removeItem(' . json_encode('quiz_end_'.$eid) . '); sessionStorage.removeItem(' . json_encode('quiz_started_'.$eid) . '); } catch(e){}';
-echo 'window.location.href = "account.php?q=result&eid=' . rawurlencode($eid) . '";';
-echo '</script></head><body></body></html>';
+if ($isAjax) {
+   header('Content-Type: application/json');
+   echo json_encode(['completed' => true]);
+   exit;
+} else {
+   // old HTML redirect
+   echo '<!doctype html><html><head>...<script>window.location.href=...</script></head></html>';
+   exit;
+}
+
 exit;
 
 

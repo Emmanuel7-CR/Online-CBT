@@ -24,9 +24,7 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet">
 
-<?php if(@$_GET['w'])
-{echo'<script>alert("'.@$_GET['w'].'");</script>';}
-?>
+
 
 <script>
 function validateForm() {var y = document.forms["form"]["name"].value;	var letters = /^[A-Za-z]+$/;if (y == null || y == "") {alert("Name must be filled out.");return false;}var z =document.forms["form"]["college"].value;if (z == null || z == "") {alert("college must be filled out.");return false;}var x = document.forms["form"]["email"].value;var atpos = x.indexOf("@");
@@ -300,7 +298,28 @@ var b = document.forms["form"]["cpassword"].value;if (a!=b){alert("Passwords mus
     </div>
   </div>
 
+
+  <!-- Error Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1200">
+  <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        <?php echo isset($_GET['w']) ? htmlspecialchars($_GET['w']) : ''; ?>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
   <script>
+    // Auto-show error toast if message exists
+(function(){
+  const errorToastEl = document.getElementById("errorToast");
+  if(errorToastEl && errorToastEl.querySelector(".toast-body").textContent.trim()!==""){
+    new bootstrap.Toast(errorToastEl,{delay:4000}).show();
+  }
+})();
+
     // Bootstrap validation
     (() => {
       'use strict';

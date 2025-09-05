@@ -178,7 +178,7 @@ echo  ' <div class="main-content-spaced">
 $c=1;
 while($row = mysqli_fetch_array($result)) {
 	$title = $row['title'];
-    $subject = $row['tag'];
+  $subject = $row['subject'];
 	$total = $row['total'];
 	$sahi = $row['sahi'];
     $time = $row['time'];
@@ -284,7 +284,7 @@ echo  '<div class="main-content-spaced">
                   <th>Name</th>
                   <th>Gender</th>
                   <th>Email</th>
-                  <th>Mobile</th>
+                  <th>Registration NO</th>
                   <th></th>
                   </tr>
                 </thead>';
@@ -342,7 +342,7 @@ echo '</table></div></div>';
     while ($row = mysqli_fetch_assoc($result)) {
         $date    = date("d-m-Y", strtotime($row['date']));
         $name    = $row['name'];
-        $subject = $row['tag'];
+        $subject = $row['subject'];
         $time    = $row['time'];
         $email   = $row['email'];
         $id      = $row['id'];
@@ -713,7 +713,7 @@ echo  '<div class="main-content-spaced">
 $c=1;
 while($row = mysqli_fetch_array($result)) {
 	$title = $row['title'];
-  $subject = $row['tag'];
+  $subject = $row['subject'];
 	$total = $row['total'];
 	$sahi = $row['sahi'];
     $time = $row['time'];

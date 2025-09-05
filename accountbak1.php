@@ -352,12 +352,17 @@ echo "</pre>";
     <div class="panel" style="margin:5%">
 
         <!-- Global Timer (visible across all questions) -->
+ <div class="exam-global-timer text-center my-3">
+  <span id="globalExamTimer" class="pulse badge exam-card-header fs-3 fw-bold rounded-pill px-3 py-2 shadow"></span>
+</div>
 
         <?php foreach ($allQuestions as $index => $q) :
             // sn is 1-based question number
             $sn = $index + 1;
             ?>
            
+         
+
 
             <div class="question-container" data-index="<?= $index ?>" data-qid="<?= htmlspecialchars($q['qid']) ?>" style="<?= $index === 0 ? '' : 'display:none;' ?>">
                 <div class="" >
@@ -368,7 +373,7 @@ echo "</pre>";
         Question <?= $sn ?> of <?= count($allQuestions) ?>
     </div>
     <!-- Timer for this question -->
-    <span class="badge bg-light fw-bold text-danger question-timer" data-index="<?= $index ?>">00:00:00</span>
+    <!--<span class="badge bg-light fw-bold text-danger question-timer" data-index="<?= $index ?>">00:00:00</span> -->
 </div>
 
                     </div>
@@ -410,95 +415,174 @@ echo "</pre>";
 </form>
 
 <script>
-let currentQuestion = <?= max(0, (int)($_GET['n'] ?? 1) - 1) ?>; // server-provided or default to 0
-const containers = Array.from(document.querySelectorAll('.question-container'));
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const submitBtn = document.getElementById('submitBtn');
-const form = document.getElementById('quizForm');
-const eid = encodeURIComponent(<?= json_encode($eid) ?>);
-const totalQuestions = <?= intval($total) ?>;
+/* --- Defensive/debugging AJAX submit for quiz --- */
+/* Replace existing submitCurrentQuestionAJAX() and event listeners with this block. */
 
-function showQuestion(index) {
-    containers.forEach((c, i) => c.style.display = (i === index) ? '' : 'none');
-    prevBtn.style.display = (index > 0) ? '' : 'none';
-    nextBtn.style.display = (index < containers.length - 1) ? '' : 'none';
-    submitBtn.style.display = (index === containers.length - 1) ? '' : 'none';
-}
+(function(){
+  console.log("[QUIZ] Init enhanced AJAX handler");
 
-// collect selected option id for current question (or '' if none)
-function getSelectedOptionForCurrent() {
-    const container = containers[currentQuestion];
+  // Ensure required things exist
+  const form = document.getElementById('quizForm');
+  const containers = Array.from(document.querySelectorAll('.question-container'));
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (!form) return console.error("[QUIZ] form#quizForm not found");
+  if (!nextBtn) return console.error("[QUIZ] #nextBtn not found");
+  if (!submitBtn) console.warn("[QUIZ] #submitBtn not found (ok for non-last pages)");
+  if (!containers.length) return console.error("[QUIZ] no .question-container elements found");
+
+  // Ensure currentQuestion exists (fallback to 0)
+  if (typeof window.currentQuestion === 'undefined') window.currentQuestion = 0;
+  console.log("[QUIZ] start currentQuestion =", window.currentQuestion, "containers=", containers.length);
+
+  function getSelectedOptionForIndex(index) {
+    const container = containers[index];
     if (!container) return '';
     const checked = container.querySelector('input[type="radio"]:checked');
     return checked ? checked.value : '';
-}
+  }
 
-// submit answer via AJAX and optionally move to next question
-function submitCurrentQuestionAJAX(next = true) {
-    const container = containers[currentQuestion];
-    if (!container) return;
+  function buildPostPayload(qid, sn, selected) {
+    // use URLSearchParams so Content-Type x-www-form-urlencoded works
+    const params = new URLSearchParams();
+    params.append('q', 'quiz');
+    params.append('step', '2');
+    params.append('eid', <?= json_encode($eid) ?>); // server-inserted eid
+    params.append('n', String(sn));
+    params.append('t', String(<?= intval($total) ?>)); // server-inserted total
+    params.append('qid', qid || '');
+    params.append('ans', selected || '');
+    return params.toString();
+  }
 
-    const qid = container.dataset.qid;
-    const sn = currentQuestion + 1;
-    const selected = getSelectedOptionForCurrent();
+  async function submitCurrentQuestionAJAX(next = true) {
+    try {
+      console.log("[QUIZ] submitCurrentQuestionAJAX called, currentQuestion=", window.currentQuestion);
 
-    // set hidden input (in case server expects POST)
-    const hiddenAns = document.getElementById('hiddenAns');
-    if (hiddenAns) hiddenAns.value = selected;
+      const container = containers[window.currentQuestion];
+      if (!container) {
+        console.error("[QUIZ] current container not found (index)", window.currentQuestion);
+        return;
+      }
 
-    const postData = `q=quiz&step=2&eid=${encodeURIComponent(eid)}&n=${sn}&t=${totalQuestions}&qid=${encodeURIComponent(qid)}&ans=${encodeURIComponent(selected)}`;
+      const qid = container.dataset.qid || '';
+      const sn = window.currentQuestion + 1; // 1-based for server
+      const selected = getSelectedOptionForIndex(window.currentQuestion);
 
-    fetch('update.php', {
+      console.log("[QUIZ] qid=", qid, "sn=", sn, "selected=", selected);
+
+      // Build query-string too (legacy servers that check $_GET)
+      const qs = new URLSearchParams({
+        q: 'quiz',
+        step: '2',
+        eid: <?= json_encode($eid) ?>,
+        n: String(sn),
+        t: String(<?= intval($total) ?>)
+      }).toString();
+
+      const body = buildPostPayload(qid, sn, selected);
+
+      const resp = await fetch('update.php?' + qs, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: postData
-    })
-    .then(response => response.json()) // expecting JSON response { nextQuestionIndex: int, completed: bool }
-    .then(data => {
-        console.log("[AJAX] Submitted question:", sn, "qid=", qid, "ans=", selected);
-        console.log("[AJAX] Server response:", data);
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: body,
+        credentials: 'same-origin'
+      });
 
-        if (data.completed) {
-            // exam finished, redirect to results
-            window.location.href = `update.php?q=result&eid=${encodeURIComponent(eid)}`;
-            return;
-        }
+      // network-level failure
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.error("[QUIZ] Server returned non-OK:", resp.status, text);
+        throw new Error("Server error " + resp.status);
+      }
 
-        if (next && data.nextQuestionIndex !== undefined) {
-            currentQuestion = data.nextQuestionIndex;
-            showQuestion(currentQuestion);
+      const contentType = resp.headers.get('Content-Type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await resp.text();
+        console.error("[QUIZ] Expected JSON but got:", text);
+        throw new Error("Invalid JSON from server");
+      }
+
+      const data = await resp.json();
+      console.log("[QUIZ] AJAX response:", data);
+
+      if (data.completed === true || data.completed === "1") {
+        // finished
+        window.location.href = `account.php?q=result&eid=${encodeURIComponent(<?= json_encode($eid) ?>)}`;
+        return;
+      }
+
+      if (data.nextQuestionIndex !== undefined && data.nextQuestionIndex !== null) {
+        window.currentQuestion = Number(data.nextQuestionIndex);
+        console.log("[QUIZ] moving to index", window.currentQuestion);
+        // showQuestion must exist on page
+        if (typeof showQuestion === 'function') {
+          showQuestion(window.currentQuestion);
+        } else {
+          // fallback: change visibility manually
+          containers.forEach((c, i) => c.style.display = (i === window.currentQuestion) ? '' : 'none');
         }
-    })
-    .catch(err => {
-        console.error("[AJAX] Error submitting question:", err);
-        // fallback: normal form submit if AJAX fails
+        return;
+      }
+
+      console.warn("[QUIZ] Response did not contain nextQuestionIndex or completed flag", data);
+
+    } catch (err) {
+      console.error("[QUIZ] AJAX submit failed:", err);
+      // fallback: add hidden inputs and do normal form submit to legacy endpoint
+      try {
+        if (!form.querySelector('input[name="qid"]')) {
+          const inQ = document.createElement('input'); inQ.type='hidden'; inQ.name='qid'; inQ.value = containers[window.currentQuestion].dataset.qid || ''; form.appendChild(inQ);
+        } else form.querySelector('input[name="qid"]').value = containers[window.currentQuestion].dataset.qid || '';
+        if (!form.querySelector('input[name="ans"]')) {
+          const inA = document.createElement('input'); inA.type='hidden'; inA.name='ans'; inA.value = getSelectedOptionForIndex(window.currentQuestion); form.appendChild(inA);
+        } else form.querySelector('input[name="ans"]').value = getSelectedOptionForIndex(window.currentQuestion);
+
+        form.action = 'update.php?q=quiz&step=2&eid=' + encodeURIComponent(<?= json_encode($eid) ?>);
+        form.method = 'POST';
         form.submit();
-    });
-}
-
-// previous: only client-side
-prevBtn.addEventListener('click', () => {
-    if (currentQuestion > 0) {
-        currentQuestion--;
-        showQuestion(currentQuestion);
+      } catch (e) {
+        console.error("[QUIZ] fallback submit also failed:", e);
+      }
     }
-});
+  }
 
-// next: AJAX submission
-nextBtn.addEventListener('click', () => submitCurrentQuestionAJAX(true));
+  // attach event listeners (avoid double-binding)
+  nextBtn.removeEventListener('click', submitCurrentQuestionAJAX);
+  nextBtn.addEventListener('click', function(){ submitCurrentQuestionAJAX(true); });
 
-// submit (last question)
-submitBtn.addEventListener('click', () => submitCurrentQuestionAJAX(false));
-
-// initialize view
-if (containers.length === 0) {
-    document.querySelector('.panel').innerHTML = '<div class="alert alert-warning">No questions found for this exam.</div>';
-} else {
-    if (currentQuestion < 0 || currentQuestion >= containers.length) currentQuestion = 0;
-    showQuestion(currentQuestion);
+  function showQuestion(index) {
+  containers.forEach((c, i) => c.style.display = (i === index) ? '' : 'none');
+  prevBtn.style.display = (index > 0) ? '' : 'none';
+  nextBtn.style.display = (index < containers.length - 1) ? '' : 'none';
+  submitBtn.style.display = (index === containers.length - 1) ? '' : 'none';
 }
 
+  if (submitBtn) {
+    submitBtn.removeEventListener('click', submitCurrentQuestionAJAX);
+    submitBtn.addEventListener('click', function(){ submitCurrentQuestionAJAX(false); });
+  }
+
+  if (prevBtn) {
+    prevBtn.removeEventListener('click', window.__quiz_prev_handler__);
+    window.__quiz_prev_handler__ = function(){
+      if (window.currentQuestion > 0) {
+        window.currentQuestion--;
+        if (typeof showQuestion === 'function') showQuestion(window.currentQuestion);
+        else containers.forEach((c,i)=> c.style.display = (i===window.currentQuestion)?'':'none');
+      }
+    };
+    prevBtn.addEventListener('click', window.__quiz_prev_handler__);
+  }
+
+  console.log("[QUIZ] handlers attached");
+})();
 </script>
 
 <?php
@@ -841,6 +925,33 @@ if (typeof examEndTime !== "undefined") {
 startExamTimer(examEndTime);
 }
 </script>
+
+<script>
+(function() {
+  function updateTimer() {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((examEndTime - now) / 1000));
+
+    const hours   = String(Math.floor(remaining / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+    const seconds = String(remaining % 60).padStart(2, '0');
+
+    const display = `${hours}:${minutes}:${seconds}`;
+    document.getElementById('globalExamTimer').textContent = display;
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      // Auto-submit final answer when time runs out
+      alert("Time is up! Submitting your exam.");
+      document.getElementById('submitBtn').click();
+    }
+  }
+
+  updateTimer(); // run immediately
+  const timerInterval = setInterval(updateTimer, 1000);
+})();
+</script>
+
 <!-- Disabled button tooltip -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
