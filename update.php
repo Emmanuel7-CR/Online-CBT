@@ -126,63 +126,107 @@ if ($action === 'addqns') {
     $total = intval($_GET['n'] ?? 0);
 
     if ($eid === '' || $total <= 0) {
-        echo "Invalid request: missing eid or total questions.";
+        echo "Invalid request";
         exit;
     }
 
     for ($i = 1; $i <= $total; $i++) {
-        $qid = uniqid('qid_', true);
         $qns = trim($_POST['qns'.$i] ?? '');
-
         $optA = trim($_POST[$i.'1'] ?? '');
         $optB = trim($_POST[$i.'2'] ?? '');
         $optC = trim($_POST[$i.'3'] ?? '');
         $optD = trim($_POST[$i.'4'] ?? '');
         $ansLetter = strtolower(trim($_POST['ans'.$i] ?? ''));
 
+        // ✅ get qid for this question (hidden field in form)
+        $qid = $_POST['qid'.$i] ?? '';
+
         if ($qns === '' || $optA === '' || $optB === '' || $optC === '' || $optD === '' || $ansLetter === '') {
-            continue; // skip incomplete question
+            continue;
         }
 
-        // Insert into questions
-        $stmtQ = $con->prepare("INSERT INTO questions (eid, qid, qns, sn) VALUES (?, ?, ?, ?)");
-        $stmtQ->bind_param("sssi", $eid, $qid, $qns, $i);
-        $stmtQ->execute();
-        $stmtQ->close();
+        if ($qid !== '') {
+            // 🔹 UPDATE MODE
+            $stmt = $con->prepare("UPDATE questions SET qns=? WHERE qid=?");
+            $stmt->bind_param("ss", $qns, $qid);
+            $stmt->execute();
+            $stmt->close();
 
-        // Insert options
-        $options = [
-            'a' => $optA,
-            'b' => $optB,
-            'c' => $optC,
-            'd' => $optD,
-        ];
+            // fetch existing options
+            $o = $con->prepare("SELECT optionid FROM options WHERE qid=? ORDER BY optionid ASC");
+            $o->bind_param("s", $qid);
+            $o->execute();
+            $res = $o->get_result();
+            $existing = $res->fetch_all(MYSQLI_ASSOC);
+            $o->close();
 
-        $correctOptionId = null;
-        foreach ($options as $letter => $text) {
-            $optionid = uniqid('opt_', true);
-            $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
-            $stmtO->bind_param("sss", $qid, $optionid, $text);
-            $stmtO->execute();
-            $stmtO->close();
+            $letters = ['a'=>$optA, 'b'=>$optB, 'c'=>$optC, 'd'=>$optD];
+            $i2 = 0; 
+            $correctOptionId = null;
 
-            if ($letter === $ansLetter) {
-                $correctOptionId = $optionid;
+            foreach ($letters as $letter=>$text) {
+                $optionid = $existing[$i2]['optionid'] ?? uniqid('opt_',true);
+
+                if (isset($existing[$i2])) {
+                    $stmtO = $con->prepare("UPDATE options SET option=? WHERE optionid=?");
+                    $stmtO->bind_param("ss", $text, $optionid);
+                } else {
+                    $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
+                    $stmtO->bind_param("sss", $qid, $optionid, $text);
+                }
+                $stmtO->execute();
+                $stmtO->close();
+
+                if ($letter === $ansLetter) {
+                    $correctOptionId = $optionid;
+                }
+                $i2++;
             }
-        }
 
-        // Insert correct answer
-        if ($correctOptionId !== null) {
-            $stmtA = $con->prepare("INSERT INTO answer (qid, ansid) VALUES (?, ?)");
-            $stmtA->bind_param("ss", $qid, $correctOptionId);
-            $stmtA->execute();
-            $stmtA->close();
+            if (!empty($correctOptionId)) {
+                $stmtA = $con->prepare("UPDATE answer SET ansid=? WHERE qid=?");
+                $stmtA->bind_param("ss", $correctOptionId, $qid);
+                $stmtA->execute();
+                $stmtA->close();
+            }
+
+        } else {
+            // 🔹 INSERT MODE
+            $qid = uniqid('qid_', true);
+            $stmtQ = $con->prepare("INSERT INTO questions (eid, qid, qns, sn) VALUES (?, ?, ?, ?)");
+            $stmtQ->bind_param("sssi", $eid, $qid, $qns, $i);
+            $stmtQ->execute();
+            $stmtQ->close();
+
+            $letters = ['a'=>$optA, 'b'=>$optB, 'c'=>$optC, 'd'=>$optD];
+            $correctOptionId = null;
+
+            foreach ($letters as $letter=>$text) {
+                $optionid = uniqid('opt_', true);
+                $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
+                $stmtO->bind_param("sss", $qid, $optionid, $text);
+                $stmtO->execute();
+                $stmtO->close();
+
+                if ($letter === $ansLetter) {
+                    $correctOptionId = $optionid;
+                }
+            }
+
+            if ($correctOptionId) {
+                $stmtA = $con->prepare("INSERT INTO answer (qid, ansid) VALUES (?, ?)");
+                $stmtA->bind_param("ss", $qid, $correctOptionId);
+                $stmtA->execute();
+                $stmtA->close();
+            }
         }
     }
 
     header("Location: dash.php?q=0");
     exit;
 }
+
+
 
 
 
@@ -253,6 +297,29 @@ if ($action === 'rmquiz') {
     }
 }
 
+ // ------------------------ ADMIN: Edit Question ------------------------
+ if (@$_GET['q'] == 'editexam' && isset($_GET['eid'])) {
+    $eid     = $_GET['eid'];
+    $title   = $_POST['title'];
+    $subject = $_POST['subject'];
+    $sahi    = $_POST['sahi'];
+    $wrong   = $_POST['wrong'];
+    $total   = $_POST['total'];
+    $time    = $_POST['time'];
+    $intro   = $_POST['intro'];
+    $tag     = $_POST['tag'];
+
+    $query = "UPDATE quiz 
+              SET title='$title', subject='$subject', sahi='$sahi', wrong='$wrong', 
+                  total='$total', time='$time', intro='$intro', tag='$tag' 
+              WHERE eid='$eid'";
+
+    mysqli_query($con, $query) or die('Error updating exam');
+
+    // After update → redirect to add/edit questions form
+    header("Location: dash.php?q=4&step=2&eid=$eid&n=$total");
+    exit();
+}
 
 
 // ------------------------ ADMIN: Delete feedback ------------------------

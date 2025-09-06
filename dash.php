@@ -33,7 +33,6 @@ else
 $name = $_SESSION['name'];;
 
 
-include_once 'dbConnection.php';
 echo '<span class="pull-right top title1" ><span class="log1"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp;&nbsp;&nbsp;&nbsp;Hello,</span> <a href="account.php" class="log log1">'.$name.'</a>&nbsp;|&nbsp;<a href="logout.php?q=account.php" class="log"><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>&nbsp;Signout</button></a></span>';
 }?>
 <?php
@@ -107,7 +106,7 @@ $(function () {
       <ul class="navbar-nav flex-row gap-3 d-1250-flex ms-auto">
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0">Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4">Add Exam</a></li>
-        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Remove Exam</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Manage Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1">Students</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6">Results</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2">Ranking</a></li>
@@ -133,7 +132,7 @@ $(function () {
           <ul class="navbar-nav flex-column gap-2">
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0"><i class="bi bi-file-earmark-text me-1"></i> Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4"><i class="bi bi-journal-plus me-1"></i> Add Exam</a></li>
-            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i> Remove Exam</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i>Manage Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i> Students</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6"><i class="bi bi-list-check me-1"></i> Results</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2"><i class="bi bi-bar-chart me-1"></i> Ranking</a></li>
@@ -665,6 +664,7 @@ if(@$_GET['q']==4 && !(@$_GET['step']) ) {
 if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
     $n   = intval($_GET['n'] ?? 0);
     $eid = htmlspecialchars($_GET['eid'] ?? '', ENT_QUOTES);
+  
 ?>
     <div class="main-content-spaced">
       <div class="card shadow-sm mb-4">
@@ -682,7 +682,52 @@ if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
           <form action="update.php?q=addqns&n=<?= $n ?>&eid=<?= $eid ?>&ch=4" 
                 method="POST" id="questionsForm">
 
-            <?php for ($i = 1; $i <= $n; $i++): ?>
+              <?php 
+            for ($i = 1; $i <= $n; $i++): 
+              // Fetch existing question for this serial number
+             $q_check = mysqli_query($con, "SELECT * FROM questions WHERE eid='$eid' AND sn='$i'");
+$qrow = mysqli_fetch_assoc($q_check);
+
+$qns = $qrow['qns'] ?? '';
+$qid = $qrow['qid'] ?? '';
+
+// fetch options
+$options = [];
+if ($qid) {
+    $opt_res = mysqli_query($con, "SELECT * FROM options WHERE qid='$qid' ORDER BY optionid ASC");
+
+    while ($opt = mysqli_fetch_assoc($opt_res)) {
+        $options[$opt['optionid']] = $opt['option'];
+    }
+
+    // fetch answer
+    $ans_res = mysqli_query($con, "SELECT ansid FROM answer WHERE qid='$qid' LIMIT 1");
+    $ans_row = mysqli_fetch_assoc($ans_res);
+    $correctAnsId = $ans_row['ansid'] ?? '';
+}
+
+// default empty
+$optiona = $optionb = $optionc = $optiond = '';
+
+// assign options in order found
+$optValues = array_values($options);
+if (isset($optValues[0])) $optiona = $optValues[0];
+if (isset($optValues[1])) $optionb = $optValues[1];
+if (isset($optValues[2])) $optionc = $optValues[2];
+if (isset($optValues[3])) $optiond = $optValues[3];
+
+
+// map correct answer to letter
+$answer = '';
+if (!empty($correctAnsId)) {
+    $keys = array_keys($options);
+    $index = array_search($correctAnsId, $keys);
+    if ($index !== false) {
+        $answer = ['a','b','c','d'][$index];
+    }
+}
+
+            ?>
               <div class="question-block" id="question-<?= $i ?>" style="display: <?= $i === 1 ? 'block' : 'none' ?>;">
                 <h5 class="fw-bold mb-3">Question <?= $i ?></h5>
 
@@ -690,41 +735,48 @@ if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
                 <div class="mb-4">
                   <label class="form-label">Question Text <small class="text-danger">*</small></label>
                   <textarea rows="3" name="qns<?= $i ?>" class="form-control" 
-                    placeholder="Write question number <?= $i ?> here..." required></textarea>
+                    placeholder="Write question number <?= $i ?> here..." required><?= htmlspecialchars($qns) ?></textarea>
                 </div>
+                <!-- Hidden QID (important for updates) -->
+              <input type="hidden" name="qid<?= $i ?>" value="<?= htmlspecialchars($qid) ?>">
+
 
                 <!-- Options -->
-                <div class="row g-3 mb-4">
+               <div class="row g-3 mb-4">
                   <div class="col-md-6">
                     <label class="form-label">Option A *</label>
-                    <input type="text" name="<?= $i ?>1" class="form-control" placeholder="Enter option A" required>
+                    <input type="text" name="<?= $i ?>1" class="form-control" 
+                          value="<?= htmlspecialchars($optiona) ?>" placeholder="Enter option A" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option B *</label>
-                    <input type="text" name="<?= $i ?>2" class="form-control" placeholder="Enter option B" required>
+                    <input type="text" name="<?= $i ?>2" class="form-control" 
+                          value="<?= htmlspecialchars($optionb) ?>" placeholder="Enter option B" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option C *</label>
-                    <input type="text" name="<?= $i ?>3" class="form-control" placeholder="Enter option C" required>
+                    <input type="text" name="<?= $i ?>3" class="form-control" 
+                          value="<?= htmlspecialchars($optionc) ?>" placeholder="Enter option C" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option D *</label>
-                    <input type="text" name="<?= $i ?>4" class="form-control" placeholder="Enter option D" required>
+                    <input type="text" name="<?= $i ?>4" class="form-control" 
+                          value="<?= htmlspecialchars($optiond) ?>" placeholder="Enter option D" required>
                   </div>
                 </div>
 
                 <!-- Correct Answer -->
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Correct Answer *</label>
-                  <select name="ans<?= $i ?>" class="form-select" required>
-                    <option value="">Select correct option...</option>
-                    <option value="a">Option A</option>
-                    <option value="b">Option B</option>
-                    <option value="c">Option C</option>
-                    <option value="d">Option D</option>
-                  </select>
-                </div>
-              </div>
+               <div class="mb-3">
+    <label class="form-label fw-bold">Correct Answer *</label>
+    <select name="ans<?= $i ?>" class="form-select" required>
+      <option value="">Select correct option...</option>
+      <option value="a" <?= $answer == 'a' ? 'selected' : '' ?>>Option A</option>
+      <option value="b" <?= $answer == 'b' ? 'selected' : '' ?>>Option B</option>
+      <option value="c" <?= $answer == 'c' ? 'selected' : '' ?>>Option C</option>
+      <option value="d" <?= $answer == 'd' ? 'selected' : '' ?>>Option D</option>
+    </select>
+  </div>
+</div>
             <?php endfor; ?>
 
             <!-- Navigation -->
@@ -799,7 +851,8 @@ echo  '<div class="main-content-spaced">
 <td><b>Total question</b></td>
 <td><b>Marks</b></td>
 <td><b>Time limit</b></td>
-<td><b>Action</b></td>
+<td><b>Delete</b></td>
+<td><b>Edit</b></td>
 </tr>
 </thead>';
 $c=1;
@@ -817,11 +870,100 @@ while($row = mysqli_fetch_array($result)) {
   <td>'.$total.'</td>
   <td>'.$sahi*$total.'</td>
   <td>'.$time.'&nbsp;min</td>
-	<td><b><a href="update.php?q=rmquiz&eid='.$eid.'" class="pull-right btn sub1" style="margin:0px;background:red"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;<span class="title1"><b>Remove</b></span></a></b></td></tr>';
+	<td>
+  <b><a href="update.php?q=rmquiz&eid='.$eid.'" class="pull-right btn sub1" style="margin:0px;background:red"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;<span class="title1"><b>Remove</b></span></a></b>
+  </td>
+  <td>
+ <a href="dash.php?q=editexam&eid=' . $eid . '" class="btn btn-warning btn-sm">
+    <i class="bi bi-pencil-square"></i> Edit
+  </a>
+</td>
+
+  </tr>';
+
+  
+ 
 }
 $c=0;
 echo '</table></div></div>';
 
+}
+?>
+
+<!-- Edit Exam -->
+ <?php
+if (@$_GET['q'] == 'editexam' && isset($_GET['eid'])) {
+    $eid = $_GET['eid'];
+    $result = mysqli_query($con, "SELECT * FROM quiz WHERE eid='$eid'") or die('Error');
+    if ($row = mysqli_fetch_array($result)) {
+        ?>
+        <div class="main-content-spaced">
+          <div class="card shadow-sm mb-4">
+            <div class="card-header exam-card-header bg-warning text-white d-flex align-items-center">
+              <i class="bi bi-pencil-square me-2"></i>
+              <span class="fs-5 fw-bold">Edit Exam</span>
+            </div>
+            <div class="card-body">
+              <form action="update.php?q=editexam&eid=<?php echo $eid; ?>" method="POST" class="row g-3">
+
+                <!-- Title -->
+                <div class="col-md-8">
+                  <label class="form-label">Exam Title</label>
+                  <input type="text" name="title" value="<?php echo htmlspecialchars($row['title']); ?>" class="form-control" required>
+                </div>
+
+                <!-- Subject -->
+                <div class="col-md-4">
+                  <label class="form-label">Subject Area</label>
+                  <input type="text" name="subject" value="<?php echo htmlspecialchars($row['subject']); ?>" class="form-control" required>
+                </div>
+
+                <!-- Total Questions -->
+                <div class="col-md-3">
+                  <label class="form-label">Total Questions</label>
+                  <input type="number" name="total" value="<?php echo $row['total']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Time -->
+                <div class="col-md-3">
+                  <label class="form-label">Time Limit (minutes)</label>
+                  <input type="number" name="time" value="<?php echo $row['time']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Correct -->
+                <div class="col-md-3">
+                  <label class="form-label">Marks per Correct</label>
+                  <input type="number" name="sahi" value="<?php echo $row['sahi']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Wrong -->
+                <div class="col-md-3">
+                  <label class="form-label">Wrong Penalty</label>
+                  <input type="number" name="wrong" value="<?php echo $row['wrong']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea name="intro" class="form-control" rows="3"><?php echo htmlspecialchars($row['intro']); ?></textarea>
+                </div>
+
+                <!-- Tag -->
+                <div class="col-md-6">
+                  <label class="form-label">Tag</label>
+                  <input type="text" name="tag" value="<?php echo htmlspecialchars($row['tag']); ?>" class="form-control">
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                  <button type="submit" class="btn btn-success">Update Exam</button>
+                  <a href="dash.php?q=5" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <?php
+    }
 }
 ?>
 
