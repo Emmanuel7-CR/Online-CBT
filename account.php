@@ -761,7 +761,7 @@ echo '</table></div></div>';}
 </div></div></div></div>
 
 <!-- Time Up Modal -->
-<div class="modal fade" id="timeUpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<!-- <div class="modal fade" id="timeUpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center p-4">
       <h5 class="fw-bold mb-3">⏰ Time’s Up!</h5>
@@ -769,7 +769,19 @@ echo '</table></div></div>';}
       <p>Submitting automatically in <span id="timeUpCountdown">3</span> seconds...</p>
     </div>
   </div>
+</div>  -->
+
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="timeUpToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        Time has elapsed. Submitting your exam...
+      </div>
+    </div>
+  </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -827,18 +839,7 @@ function startExamTimer(endTime) {
             submitted = true;
             console.log("[Timer] ⏰ Time expired, preparing auto-submit…");
 
-            // Show modal
-            const modalEl = document.getElementById("timeUpModal");
-            if (!modalEl) {
-                console.warn("[Timer] ⚠️ Modal element not found!");
-            } else {
-                const timeUpModal = new bootstrap.Modal(modalEl, {
-                    backdrop: "static",
-                    keyboard: false
-                });
-                timeUpModal.show();
-                console.log("[Timer] Modal shown");
-            }
+         
 
             // Optional beep
             try {
@@ -941,8 +942,10 @@ startExamTimer(examEndTime);
 
     if (remaining <= 0) {
       clearInterval(timerInterval);
-      // Auto-submit final answer when time runs out
-      alert("Time is up! Submitting your exam.");
+      // Show toast instead of alert
+      var toastElement = document.getElementById('timeUpToast');
+      var toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
       document.getElementById('submitBtn').click();
     }
   }
