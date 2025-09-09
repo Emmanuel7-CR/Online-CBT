@@ -335,6 +335,141 @@ if ($action === 'fdid' || isset($_REQUEST['fdid'])) {
     exit;
 }
 
+// ------------------------ ADMIN: Add Student ------------------------
+if (@$_GET['q'] == 'addstudent' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isAdmin()) {
+        $_SESSION['flash_error'] = "Permission denied: admin required.";
+        header("Location: dash.php?q=7");
+        exit;
+    }
+
+    $name      = trim($_POST['name']);
+    $mob       = trim($_POST['mob']);
+    $email     = trim($_POST['email']);
+    $password  = trim($_POST['password']);
+    $cpassword = trim($_POST['cpassword']);
+    $gender    = trim($_POST['gender']);
+
+    if ($password !== $cpassword) {
+        $_SESSION['flash_error'] = "Passwords do not match.";
+        header("Location: dash.php?q=7");
+        exit;
+    }
+
+    $hashed = password_hash($password, PASSWORD_BCRYPT);
+
+    $sql = "INSERT INTO user (name, mob, email, password, gender) 
+            VALUES ('$name', '$mob', '$email', '$hashed', '$gender')";
+    if (mysqli_query($con, $sql)) {
+    $_SESSION['flash_success'] = "Account registered successfully.";
+} else {
+    $_SESSION['flash_error'] = "Error: " . mysqli_error($con);
+}
+header("Location: dash.php?q=7");
+exit;
+
+}
+
+
+
+
+// ------------------------ ADMIN: Delete User ------------------------
+if ($action === 'deluser' && isset($_GET['email'])) {
+    if (!isAdmin()) {
+        $_SESSION['flash_error'] = "Permission denied: admin required.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    $studentEmail = trim($_GET['email']);
+    if ($studentEmail === '') {
+        $_SESSION['flash_error'] = "Invalid request: missing email.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    // Prevent admin deleting themselves
+    if ($studentEmail === $_SESSION['email']) {
+        $_SESSION['flash_error'] = "You cannot delete your own account.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    // Delete related data first
+    $tables = ["history", "feedback", "rank"];
+    foreach ($tables as $tbl) {
+        $stmt = $con->prepare("DELETE FROM $tbl WHERE email=?");
+        if ($stmt) {
+            $stmt->bind_param("s", $studentEmail);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+
+    // Finally, delete from user table
+    $stmt = $con->prepare("DELETE FROM user WHERE email=?");
+    if ($stmt) {
+        $stmt->bind_param("s", $studentEmail);
+        if ($stmt->execute()) {
+            $_SESSION['flash_success'] = "Student account and related records deleted successfully.";
+        } else {
+            $_SESSION['flash_error'] = "Failed to delete student account.";
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['flash_error'] = "Server error: could not prepare delete.";
+    }
+
+    header("Location: dash.php?q=1");
+    exit;
+}
+
+
+// ------------------------ ADMIN: Edit User ------------------------
+if ($action === 'edituser' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isAdmin()) {
+        $_SESSION['flash_error'] = "Permission denied: admin only.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    $oldEmail = trim($_POST['old_email']);
+    $name     = trim($_POST['name']);
+    $mob      = trim($_POST['mob']);
+    $email    = trim($_POST['email']);
+    $gender   = trim($_POST['gender']);
+    $password = trim($_POST['password']);  // may be empty
+
+    if ($oldEmail === '' || $name === '' || $mob === '' || $email === '' || $gender === '') {
+        $_SESSION['flash_error'] = "All required fields must be filled.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    if ($password !== '') {
+        // hash the new password before saving
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $con->prepare("UPDATE user SET name=?, mob=?, email=?, password=?, gender=? WHERE email=?");
+        $stmt->bind_param("ssssss", $name, $mob, $email, $hashed, $gender, $oldEmail);
+    } else {
+        // update everything except password
+        $stmt = $con->prepare("UPDATE user SET name=?, mob=?, email=?, gender=? WHERE email=?");
+        $stmt->bind_param("sssss", $name, $mob, $email, $gender, $oldEmail);
+    }
+
+    if ($stmt && $stmt->execute()) {
+        $_SESSION['flash_success'] = "User details updated successfully.";
+    } else {
+        $_SESSION['flash_error'] = "Failed to update user.";
+    }
+    if ($stmt) $stmt->close();
+
+    header("Location: dash.php?q=1");
+    exit;
+}
+
+
+
 // ------------------------ STUDENT: Start exam (optional) ------------------------
 if ($action === 'exam' || (isset($_GET['q']) && $_GET['q'] === 'exam')) {
     $eid = $_REQUEST['eid'] ?? '';

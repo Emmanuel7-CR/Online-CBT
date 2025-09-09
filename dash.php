@@ -2,6 +2,7 @@
 session_start();
 include_once 'dbConnection.php';
 
+
 // Ensure login
 if (!isset($_SESSION['email'])) {
     header("Location: index.php");
@@ -87,11 +88,11 @@ $(function () {
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0">Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4">Add Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Manage Exam</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==7)?'active':'' ?>" href="dash.php?q=7">Add Students </a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1">Students</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6">Results</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2">Ranking</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3">Feedback</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank">Home</a></li>
         <li class="nav-item">
           <a class="nav-link text-white text-decoration-none" href="logout.php?q=account.php">Signout</a>
         </li>
@@ -113,11 +114,11 @@ $(function () {
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0"><i class="bi bi-file-earmark-text me-1"></i> Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4"><i class="bi bi-journal-plus me-1"></i> Add Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i>Manage Exam</a></li>
-            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i> Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==7)?'active':'' ?>" href="dash.php?q=7"><i class="bi bi-person-plus me-1"></i> Add Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i>Students</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6"><i class="bi bi-list-check me-1"></i> Results</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2"><i class="bi bi-bar-chart me-1"></i> Ranking</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3"><i class="bi bi-chat-dots me-1"></i> Feedback</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank"><i class="bi bi-house-door me-1"></i> Home</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="logout.php?q=account.php"><i class="bi bi-box-arrow-right me-1"></i> Signout</a></li>
           </ul>
         </div>
@@ -245,6 +246,281 @@ echo '</table></div></div>';}
 
 ?>
 
+<!-- ADD STUDENT FORM (q=7) -->
+<?php if(@$_GET['q']==7) { $year = date('Y'); ?>
+<div class="container d-flex justify-content-center align-items-center min-vh-100" style="padding-top:20px; padding-bottom:20px;">
+  <div class="card exam-card-header shadow-lg border-0 p-4 auth-card" style="max-width: 520px; width:100%;">
+
+    <!-- Logo -->
+    <div class="text-center mb-3 ">
+      <img src="image/PTI.jpg" alt="PTI Logo" class=" rounded-circle img-fluid mb-2" style="width:80px; height:auto;">
+      <h4 class="fw-bold mb-0">Petroleum Training Institute</h4>
+    </div>
+
+    <!-- Title -->
+    <div class="text-center mb-4">
+      <h5 class="fw-semibold">Register New Student</h5>
+    </div>
+
+    <!-- Add Student Form -->
+    <form class="needs-validation mx-auto" novalidate action="update.php?q=addstudent" method="POST">
+
+      <!-- Full Name -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required minlength="2" autocomplete="off">
+          <label for="name" class="text-dark">Full Name</label>
+          <!--<div class="invalid-feedback">Please enter full name.</div> -->
+        </div>
+      </div>
+
+      <!-- Gender -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-gender-ambiguous"></i></span>
+        <div class="form-control d-flex align-items-center justify-content-between">
+          <div class="form-check">
+            <input class="form-check-input gender-checkbox" type="checkbox" id="genderM" name="gender" value="M">
+            <label class="form-check-label" for="genderM">Male</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input gender-checkbox" type="checkbox" id="genderF" name="gender" value="F">
+            <label class="form-check-label" for="genderF">Female</label>
+          </div>
+        </div>
+      </div>
+      <!--<div class="invalid-feedback">Please select a gender.</div> -->
+
+      <!-- Email -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="email" class="form-control" id="email" name="email" placeholder="Email" required autocomplete="off">
+          <label for="email" class="text-dark">Email</label>
+         <!-- <div class="invalid-feedback">Enter valid email.</div> -->
+        </div>
+      </div>
+
+      <!-- REG Number -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-card-checklist"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="tel" class="form-control" id="mob" name="mob" placeholder="REG Number" required pattern="[\d+\-\s()]{7,}" autocomplete="off">
+          <label for="mob" class="text-dark">REG Number</label>
+         <!-- <div class="invalid-feedback">Enter valid REG number.</div> -->
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+        <div class="form-floating flex-grow-1 position-relative">
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required minlength="8" maxlength="16" autocomplete="new-password">
+          <label for="password" class="text-dark">Password</label>
+          <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('password', this)">
+            <i class="bi bi-eye"></i>
+          </button>
+         <!-- <div class="invalid-feedback">Password must be 8–16 characters.</div> -->
+        </div>
+      </div>
+
+      <!-- Strength meter -->
+      <div class="mb-3" id="strengthWrapper" style="display:none;">
+        <small id="strengthMessage" class="fw-semibold"></small>
+        <div class="progress" style="height:5px;">
+          <div id="strengthBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
+        <div class="form-floating flex-grow-1 position-relative">
+          <input type="password" class="form-control" id="cpassword" name="cpassword" placeholder="Confirm Password" required autocomplete="new-password">
+          <label for="cpassword" class="text-dark">Confirm Password</label>
+          <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('cpassword', this)">
+            <i class="bi bi-eye"></i>
+          </button>
+         <!-- <div class="invalid-feedback">Please confirm password.</div> -->
+        </div>
+      </div>
+
+      <div class="mb-2"><small id="matchHelp" class="fw-semibold"></small></div>
+
+      <!-- Toast error messages (from update.php) -->
+      <?php if (isset($_SESSION['flash_error'])): ?>
+        <p class="text-danger small mb-2"><?= htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></p>
+      <?php endif; ?>
+      <?php if (isset($_SESSION['flash_success'])): ?>
+        <p class="text-success small mb-2"><?= htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?></p>
+      <?php endif; ?>
+
+      <!-- Submit -->
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-person-plus me-1"></i> Add Student
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <p class="text-center mt-4 small text-light mb-0">
+      &copy; <?= $year ?> Petroleum Training Institute
+    </p>
+  </div>
+</div>
+
+<!-- Toasts -->
+<?php if (isset($_SESSION['flash_success'])): ?>
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+    <div id="successToast" class="toast align-items-center text-bg-success border-0">
+      <div class="d-flex">
+        <div class="toast-body">
+          <?= htmlspecialchars($_SESSION['flash_success']); ?>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_error'])): ?>
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1200">
+    <div id="errorToast" class="toast align-items-center text-bg-danger border-0">
+      <div class="d-flex">
+        <div class="toast-body">
+          <?= htmlspecialchars($_SESSION['flash_error']); ?>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
+<?php } ?>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const successToast = document.getElementById("successToast");
+    const errorToast   = document.getElementById("errorToast");
+
+    if (successToast) new bootstrap.Toast(successToast).show();
+    if (errorToast) new bootstrap.Toast(errorToast).show();
+  });
+</script>
+
+<script>
+  // validation
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  })();
+
+  // toggle password
+  function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+  }
+
+  // confirm password check
+  (function(){
+    const pw = document.getElementById("password");
+    const cpw = document.getElementById("cpassword");
+    const help = document.getElementById("matchHelp");
+    if(!pw || !cpw) return;
+    const check = () => {
+      if(!cpw.value){
+        help.textContent = '';
+        cpw.setCustomValidity('');
+        return;
+      }
+      if(pw.value !== cpw.value){
+        help.textContent = "Passwords do not match";
+        help.className = "text-danger fw-semibold";
+        cpw.setCustomValidity("Mismatch");
+      } else {
+        help.textContent = "Passwords match";
+        help.className = "text-success fw-semibold";
+        cpw.setCustomValidity("");
+      }
+    };
+    pw.addEventListener("input", check);
+    cpw.addEventListener("input", check);
+  })();
+
+  // password strength meter
+  (function(){
+    const pw = document.getElementById("password");
+    const bar = document.getElementById("strengthBar");
+    const msg = document.getElementById("strengthMessage");
+    const wrap = document.getElementById("strengthWrapper");
+    if(!pw) return;
+    pw.addEventListener("input", () => {
+      if(!pw.value){
+        wrap.style.display = "none";
+        bar.style.width = "0%";
+        msg.textContent = "";
+        return;
+      }
+      wrap.style.display = "block";
+      let s=0;
+      if(pw.value.length>=8) s++;
+      if(/[A-Z]/.test(pw.value)) s++;
+      if(/[0-9]/.test(pw.value)) s++;
+      if(/[^A-Za-z0-9]/.test(pw.value)) s++;
+      switch(s){
+        case 1: bar.style.width="25%"; bar.className="progress-bar bg-danger"; msg.textContent="Weak"; msg.className="text-danger fw-semibold"; break;
+        case 2: bar.style.width="50%"; bar.className="progress-bar bg-warning"; msg.textContent="Medium"; msg.className="text-warning fw-semibold"; break;
+        case 3: bar.style.width="75%"; bar.className="progress-bar bg-primary"; msg.textContent="Strong"; msg.className="text-primary fw-semibold"; break;
+        case 4: bar.style.width="100%"; bar.className="progress-bar bg-success"; msg.textContent="Very Strong"; msg.className="text-success fw-semibold"; break;
+      }
+    });
+  })();
+
+  // gender checkbox (only one allowed)
+  document.addEventListener('DOMContentLoaded', function() {
+    var genderCheckboxes = document.querySelectorAll('.gender-checkbox');
+    genderCheckboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          genderCheckboxes.forEach(function(cb) {
+            if (cb !== checkbox) cb.checked = false;
+          });
+        }
+      });
+    });
+  });
+
+  // auto-show toasts
+  (function(){
+    const errorToastEl = document.getElementById("errorToast");
+    if(errorToastEl && errorToastEl.querySelector(".toast-body").textContent.trim()!==""){
+      new bootstrap.Toast(errorToastEl,{delay:4000}).show();
+    }
+    const successToastEl = document.getElementById("successToast");
+    if(successToastEl && successToastEl.querySelector(".toast-body").textContent.trim()!==""){
+      new bootstrap.Toast(successToastEl,{delay:4000}).show();
+    }
+  })();
+</script>
+
 
 
       <!--USERS-->
@@ -266,30 +542,168 @@ echo  '<div class="main-content-spaced">
                   <th>Gender</th>
                   <th>Email</th>
                   <th>Registration NO</th>
-                  <th></th>
+                  <th>Delete</th>
+                  <th>Edit</th>
+                  
                   </tr>
                 </thead>';
 $c=1;
 while($row = mysqli_fetch_array($result)) {
-	$name = $row['name'];
-	$mob = $row['mob'];
-	$gender = $row['gender'];
-    $email = $row['email'];
-	
+    $name   = $row['name'];
+    $mob    = $row['mob'];
+    $gender = $row['gender'];
+    $email  = $row['email'];
+    $pass   = $row['password'];
 
-	echo '<tr>
-  <td>'.$c++.'</td>
-  <td>'.$name.'</td>
-  <td>'.$gender.'</td>
-  
-  <td>'.$email.'</td>
-  <td>'.$mob.'</td>
-	<td><a title="Delete User" href="update.php?demail='.$email.'"><b><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></b></a></td></tr>';
+    echo '<tr>
+      <td>'.$c++.'</td>
+      <td>'.$name.'</td>
+      <td>'.$gender.'</td>
+      <td>'.$email.'</td>
+      <td>'.$mob.'</td>
+      <td>
+        <button class="btn btn-danger btn-sm deleteBtn"  
+                data-email="'.$email.'"
+                data-name="'.$name.'">Delete</button>
+      </td>
+      <td>
+        <button class="btn btn-warning btn-sm editBtn"
+                data-name="'.htmlspecialchars($name, ENT_QUOTES).'"
+                data-mob="'.htmlspecialchars($mob, ENT_QUOTES).'"
+                data-email="'.htmlspecialchars($email, ENT_QUOTES).'"
+                data-gender="'.htmlspecialchars($gender, ENT_QUOTES).'">
+          Edit
+        </button>
+      </td>
+    </tr>';
 }
+
 $c=0;
 echo '</table></div></div>';
 
 }?>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <span id="userName" class="fw-bold"></span>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a id="confirmDelete" href="#" class="btn btn-danger">Yes, Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const deleteButtons = document.querySelectorAll(".deleteBtn");
+  const userNameSpan = document.getElementById("userName");
+  const confirmDeleteLink = document.getElementById("confirmDelete");
+
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const email = this.getAttribute("data-email");
+      const name  = this.getAttribute("data-name");
+
+      // Update modal content
+      userNameSpan.textContent = name;
+
+      // Update confirm link
+      confirmDeleteLink.href = "update.php?q=deluser&email=" + encodeURIComponent(email);
+
+
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
+      modal.show();
+    });
+  });
+});
+</script>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="update.php?q=edituser">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">Edit User Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="old_email" id="editOldEmail">
+
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" id="editName" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Registration No</label>
+            <input type="text" name="mob" id="editMob" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" id="editEmail" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+  <label class="form-label">New Password</label>
+  <input type="password" name="password" id="editPassword" class="form-control">
+</div>
+
+
+          <div class="mb-3">
+            <label class="form-label">Gender</label>
+            <select name="gender" id="editGender" class="form-select" required>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Existing delete modal logic remains unchanged
+
+  const editButtons = document.querySelectorAll(".editBtn");
+  const editModal = new bootstrap.Modal(document.getElementById("editUserModal"));
+
+  editButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.getElementById("editName").value = this.dataset.name;
+      document.getElementById("editMob").value = this.dataset.mob;
+      document.getElementById("editEmail").value = this.dataset.email;
+      document.getElementById("editPassword").value = this.dataset.password;
+      document.getElementById("editGender").value = this.dataset.gender;
+
+      // keep old_email in hidden field so we know which user to update
+      document.getElementById("editOldEmail").value = this.dataset.email;
+
+      editModal.show();
+    });
+  });
+});
+</script>
+
+
+
 
 
 <!-- RESULTS PAGE (q=6) -->
@@ -996,8 +1410,6 @@ document.addEventListener('click', function (e) {
   feedbackModal.show();
 });
 </script>
-
-
 
 
 

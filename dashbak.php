@@ -1,41 +1,21 @@
 <?php
- include_once 'dbConnection.php';
 session_start();
-$email=$_SESSION['email'];
-
-// --- determine if current user is admin ---
-$isAdmin = false;
-if (isset($email) && $email) {
-    // Try to read role from user table (preferred)
-    $safeEmail = mysqli_real_escape_string($con, $email);
-    $r = mysqli_query($con, "SELECT role FROM user WHERE email='$safeEmail' LIMIT 1");
-    if ($r && mysqli_num_rows($r) > 0) {
-        $rowRole = mysqli_fetch_assoc($r);
-        // if your user table uses 'role' column and stores 'admin' for admins
-        if (isset($rowRole['role']) && strtolower($rowRole['role']) === 'admin') {
-            $isAdmin = true;
-        }
-    }
-
-    // Fallback: if there is no role column, check specific admin emails (adjust as needed)
-    if (!$isAdmin) {
-        $admins = ['sunnygkp10@gmail.com']; // <-- replace with real admin email(s)
-        if (in_array($email, $admins, true)) $isAdmin = true;
-    }
-}
-
-  if(!(isset($_SESSION['email']))){
-header("location:index.php");
-
-}
-else
-{
-$name = $_SESSION['name'];;
-
-
 include_once 'dbConnection.php';
-echo '<span class="pull-right top title1" ><span class="log1"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp;&nbsp;&nbsp;&nbsp;Hello,</span> <a href="account.php" class="log log1">'.$name.'</a>&nbsp;|&nbsp;<a href="logout.php?q=account.php" class="log"><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>&nbsp;Signout</button></a></span>';
-}?>
+
+
+// Ensure login
+if (!isset($_SESSION['email'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$email   = $_SESSION['email'];
+$name    = $_SESSION['name'] ?? '';
+$role    = $_SESSION['role'] ?? '';
+$isAdmin = ($role === 'admin');   // true if role = "admin"
+
+
+?>
 <?php
 if (!empty($_SESSION['flash_success'])) {
     echo '<div class="alert alert-success">'.htmlspecialchars($_SESSION['flash_success']).'</div>';
@@ -107,11 +87,12 @@ $(function () {
       <ul class="navbar-nav flex-row gap-3 d-1250-flex ms-auto">
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0">Exam</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4">Add Exam</a></li>
-        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Remove Exam</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5">Manage Exam</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==7)?'active':'' ?>" href="dash.php?q=7">Add Students </a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1">Students</a></li>
+        <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6">Results</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2">Ranking</a></li>
         <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3">Feedback</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank">Home</a></li>
         <li class="nav-item">
           <a class="nav-link text-white text-decoration-none" href="logout.php?q=account.php">Signout</a>
         </li>
@@ -132,11 +113,12 @@ $(function () {
           <ul class="navbar-nav flex-column gap-2">
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==0)?'active':'' ?>" href="dash.php?q=0"><i class="bi bi-file-earmark-text me-1"></i> Exam</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==4)?'active':'' ?>" href="dash.php?q=4"><i class="bi bi-journal-plus me-1"></i> Add Exam</a></li>
-            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i> Remove Exam</a></li>
-            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i> Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==5)?'active':'' ?>" href="dash.php?q=5"><i class="bi bi-journal-minus me-1"></i>Manage Exam</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==7)?'active':'' ?>" href="dash.php?q=7"><i class="bi bi-person-plus me-1"></i> Add Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==1)?'active':'' ?>" href="dash.php?q=1"><i class="bi bi-people me-1"></i>Students</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==6)?'active':'' ?>" href="dash.php?q=6"><i class="bi bi-list-check me-1"></i> Results</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==2)?'active':'' ?>" href="dash.php?q=2"><i class="bi bi-bar-chart me-1"></i> Ranking</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= (@$_GET['q']==3)?'active':'' ?>" href="dash.php?q=3"><i class="bi bi-chat-dots me-1"></i> Feedback</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="index.php" target="_blank"><i class="bi bi-house-door me-1"></i> Home</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="logout.php?q=account.php"><i class="bi bi-box-arrow-right me-1"></i> Signout</a></li>
           </ul>
         </div>
@@ -264,6 +246,281 @@ echo '</table></div></div>';}
 
 ?>
 
+<!-- ADD STUDENT FORM (q=7) -->
+<?php if(@$_GET['q']==7) { $year = date('Y'); ?>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card shadow-lg border-0 p-4 auth-card" style="max-width: 520px; width:100%;">
+
+    <!-- Logo -->
+    <div class="text-center mb-3">
+      <img src="image/PTI.jpg" alt="PTI Logo" class="img-fluid mb-2" style="width:80px; height:auto;">
+      <h4 class="fw-bold mb-0">Petroleum Training Institute</h4>
+    </div>
+
+    <!-- Title -->
+    <div class="text-center mb-4">
+      <h5 class="fw-semibold">Register New Student</h5>
+    </div>
+
+    <!-- Add Student Form -->
+    <form class="needs-validation mx-auto" novalidate action="update.php?q=addstudent" method="POST">
+
+      <!-- Full Name -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required minlength="2" autocomplete="off">
+          <label for="name">Full Name</label>
+          <!--<div class="invalid-feedback">Please enter full name.</div> -->
+        </div>
+      </div>
+
+      <!-- Gender -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-gender-ambiguous"></i></span>
+        <div class="form-control d-flex align-items-center justify-content-between">
+          <div class="form-check">
+            <input class="form-check-input gender-checkbox" type="checkbox" id="genderM" name="gender" value="M">
+            <label class="form-check-label" for="genderM">Male</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input gender-checkbox" type="checkbox" id="genderF" name="gender" value="F">
+            <label class="form-check-label" for="genderF">Female</label>
+          </div>
+        </div>
+      </div>
+      <!--<div class="invalid-feedback">Please select a gender.</div> -->
+
+      <!-- Email -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="email" class="form-control" id="email" name="email" placeholder="Email" required autocomplete="off">
+          <label for="email">Email</label>
+         <!-- <div class="invalid-feedback">Enter valid email.</div> -->
+        </div>
+      </div>
+
+      <!-- REG Number -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-card-checklist"></i></span>
+        <div class="form-floating flex-grow-1">
+          <input type="tel" class="form-control" id="mob" name="mob" placeholder="REG Number" required pattern="[\d+\-\s()]{7,}" autocomplete="off">
+          <label for="mob">REG Number</label>
+         <!-- <div class="invalid-feedback">Enter valid REG number.</div> -->
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+        <div class="form-floating flex-grow-1 position-relative">
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required minlength="8" maxlength="16" autocomplete="new-password">
+          <label for="password">Password</label>
+          <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('password', this)">
+            <i class="bi bi-eye"></i>
+          </button>
+         <!-- <div class="invalid-feedback">Password must be 8–16 characters.</div> -->
+        </div>
+      </div>
+
+      <!-- Strength meter -->
+      <div class="mb-3" id="strengthWrapper" style="display:none;">
+        <small id="strengthMessage" class="fw-semibold"></small>
+        <div class="progress" style="height:5px;">
+          <div id="strengthBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="input-group mb-3">
+        <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
+        <div class="form-floating flex-grow-1 position-relative">
+          <input type="password" class="form-control" id="cpassword" name="cpassword" placeholder="Confirm Password" required autocomplete="new-password">
+          <label for="cpassword">Confirm Password</label>
+          <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('cpassword', this)">
+            <i class="bi bi-eye"></i>
+          </button>
+         <!-- <div class="invalid-feedback">Please confirm password.</div> -->
+        </div>
+      </div>
+
+      <div class="mb-2"><small id="matchHelp" class="fw-semibold"></small></div>
+
+      <!-- Toast error messages (from update.php) -->
+      <?php if (isset($_SESSION['flash_error'])): ?>
+        <p class="text-danger small mb-2"><?= htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></p>
+      <?php endif; ?>
+      <?php if (isset($_SESSION['flash_success'])): ?>
+        <p class="text-success small mb-2"><?= htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?></p>
+      <?php endif; ?>
+
+      <!-- Submit -->
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-person-plus me-1"></i> Add Student
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <p class="text-center mt-4 small text-muted mb-0">
+      &copy; <?= $year ?> Petroleum Training Institute
+    </p>
+  </div>
+</div>
+
+<!-- Toasts -->
+<?php if (isset($_SESSION['flash_success'])): ?>
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+    <div id="successToast" class="toast align-items-center text-bg-success border-0">
+      <div class="d-flex">
+        <div class="toast-body">
+          <?= htmlspecialchars($_SESSION['flash_success']); ?>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  <?php unset($_SESSION['flash_success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['flash_error'])): ?>
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1200">
+    <div id="errorToast" class="toast align-items-center text-bg-danger border-0">
+      <div class="d-flex">
+        <div class="toast-body">
+          <?= htmlspecialchars($_SESSION['flash_error']); ?>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  <?php unset($_SESSION['flash_error']); ?>
+<?php endif; ?>
+<?php } ?>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const successToast = document.getElementById("successToast");
+    const errorToast   = document.getElementById("errorToast");
+
+    if (successToast) new bootstrap.Toast(successToast).show();
+    if (errorToast) new bootstrap.Toast(errorToast).show();
+  });
+</script>
+
+<script>
+  // validation
+  (() => {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  })();
+
+  // toggle password
+  function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+  }
+
+  // confirm password check
+  (function(){
+    const pw = document.getElementById("password");
+    const cpw = document.getElementById("cpassword");
+    const help = document.getElementById("matchHelp");
+    if(!pw || !cpw) return;
+    const check = () => {
+      if(!cpw.value){
+        help.textContent = '';
+        cpw.setCustomValidity('');
+        return;
+      }
+      if(pw.value !== cpw.value){
+        help.textContent = "Passwords do not match";
+        help.className = "text-danger fw-semibold";
+        cpw.setCustomValidity("Mismatch");
+      } else {
+        help.textContent = "Passwords match";
+        help.className = "text-success fw-semibold";
+        cpw.setCustomValidity("");
+      }
+    };
+    pw.addEventListener("input", check);
+    cpw.addEventListener("input", check);
+  })();
+
+  // password strength meter
+  (function(){
+    const pw = document.getElementById("password");
+    const bar = document.getElementById("strengthBar");
+    const msg = document.getElementById("strengthMessage");
+    const wrap = document.getElementById("strengthWrapper");
+    if(!pw) return;
+    pw.addEventListener("input", () => {
+      if(!pw.value){
+        wrap.style.display = "none";
+        bar.style.width = "0%";
+        msg.textContent = "";
+        return;
+      }
+      wrap.style.display = "block";
+      let s=0;
+      if(pw.value.length>=8) s++;
+      if(/[A-Z]/.test(pw.value)) s++;
+      if(/[0-9]/.test(pw.value)) s++;
+      if(/[^A-Za-z0-9]/.test(pw.value)) s++;
+      switch(s){
+        case 1: bar.style.width="25%"; bar.className="progress-bar bg-danger"; msg.textContent="Weak"; msg.className="text-danger fw-semibold"; break;
+        case 2: bar.style.width="50%"; bar.className="progress-bar bg-warning"; msg.textContent="Medium"; msg.className="text-warning fw-semibold"; break;
+        case 3: bar.style.width="75%"; bar.className="progress-bar bg-primary"; msg.textContent="Strong"; msg.className="text-primary fw-semibold"; break;
+        case 4: bar.style.width="100%"; bar.className="progress-bar bg-success"; msg.textContent="Very Strong"; msg.className="text-success fw-semibold"; break;
+      }
+    });
+  })();
+
+  // gender checkbox (only one allowed)
+  document.addEventListener('DOMContentLoaded', function() {
+    var genderCheckboxes = document.querySelectorAll('.gender-checkbox');
+    genderCheckboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          genderCheckboxes.forEach(function(cb) {
+            if (cb !== checkbox) cb.checked = false;
+          });
+        }
+      });
+    });
+  });
+
+  // auto-show toasts
+  (function(){
+    const errorToastEl = document.getElementById("errorToast");
+    if(errorToastEl && errorToastEl.querySelector(".toast-body").textContent.trim()!==""){
+      new bootstrap.Toast(errorToastEl,{delay:4000}).show();
+    }
+    const successToastEl = document.getElementById("successToast");
+    if(successToastEl && successToastEl.querySelector(".toast-body").textContent.trim()!==""){
+      new bootstrap.Toast(successToastEl,{delay:4000}).show();
+    }
+  })();
+</script>
+
 
 
       <!--USERS-->
@@ -285,30 +542,258 @@ echo  '<div class="main-content-spaced">
                   <th>Gender</th>
                   <th>Email</th>
                   <th>Registration NO</th>
-                  <th></th>
+                  <th>Delete</th>
+                  <th>Edit</th>
+                  
                   </tr>
                 </thead>';
 $c=1;
 while($row = mysqli_fetch_array($result)) {
-	$name = $row['name'];
-	$mob = $row['mob'];
-	$gender = $row['gender'];
-    $email = $row['email'];
-	
+    $name   = $row['name'];
+    $mob    = $row['mob'];
+    $gender = $row['gender'];
+    $email  = $row['email'];
+    $pass   = $row['password'];
 
-	echo '<tr>
-  <td>'.$c++.'</td>
-  <td>'.$name.'</td>
-  <td>'.$gender.'</td>
-  
-  <td>'.$email.'</td>
-  <td>'.$mob.'</td>
-	<td><a title="Delete User" href="update.php?demail='.$email.'"><b><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></b></a></td></tr>';
+    echo '<tr>
+      <td>'.$c++.'</td>
+      <td>'.$name.'</td>
+      <td>'.$gender.'</td>
+      <td>'.$email.'</td>
+      <td>'.$mob.'</td>
+      <td>
+        <button class="btn btn-danger btn-sm deleteBtn"  
+                data-email="'.$email.'"
+                data-name="'.$name.'">Delete</button>
+      </td>
+      <td>
+        <button class="btn btn-warning btn-sm editBtn"
+                data-name="'.htmlspecialchars($name, ENT_QUOTES).'"
+                data-mob="'.htmlspecialchars($mob, ENT_QUOTES).'"
+                data-email="'.htmlspecialchars($email, ENT_QUOTES).'"
+                data-gender="'.htmlspecialchars($gender, ENT_QUOTES).'">
+          Edit
+        </button>
+      </td>
+    </tr>';
 }
+
 $c=0;
 echo '</table></div></div>';
 
 }?>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete <span id="userName" class="fw-bold"></span>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a id="confirmDelete" href="#" class="btn btn-danger">Yes, Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const deleteButtons = document.querySelectorAll(".deleteBtn");
+  const userNameSpan = document.getElementById("userName");
+  const confirmDeleteLink = document.getElementById("confirmDelete");
+
+  deleteButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const email = this.getAttribute("data-email");
+      const name  = this.getAttribute("data-name");
+
+      // Update modal content
+      userNameSpan.textContent = name;
+
+      // Update confirm link
+      confirmDeleteLink.href = "update.php?q=deluser&email=" + encodeURIComponent(email);
+
+
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
+      modal.show();
+    });
+  });
+});
+</script>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="update.php?q=edituser">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">Edit User Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="old_email" id="editOldEmail">
+
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" id="editName" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Registration No</label>
+            <input type="text" name="mob" id="editMob" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" id="editEmail" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+  <label class="form-label">New Password</label>
+  <input type="password" name="password" id="editPassword" class="form-control">
+</div>
+
+
+          <div class="mb-3">
+            <label class="form-label">Gender</label>
+            <select name="gender" id="editGender" class="form-select" required>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Existing delete modal logic remains unchanged
+
+  const editButtons = document.querySelectorAll(".editBtn");
+  const editModal = new bootstrap.Modal(document.getElementById("editUserModal"));
+
+  editButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.getElementById("editName").value = this.dataset.name;
+      document.getElementById("editMob").value = this.dataset.mob;
+      document.getElementById("editEmail").value = this.dataset.email;
+      document.getElementById("editPassword").value = this.dataset.password;
+      document.getElementById("editGender").value = this.dataset.gender;
+
+      // keep old_email in hidden field so we know which user to update
+      document.getElementById("editOldEmail").value = this.dataset.email;
+
+      editModal.show();
+    });
+  });
+});
+</script>
+
+
+
+
+
+<!-- RESULTS PAGE (q=6) -->
+<?php
+if (@$_GET['q'] == 6) {
+
+    // Optional: restrict to admins only
+    if (!isset($isAdmin) || !$isAdmin) {
+        echo '<div class="main-content-spaced"><div class="card shadow-sm mb-4"><div class="card-body"><div class="alert alert-danger">Access denied. You do not have permission to view this page.</div></div></div></div>';
+    } else {
+
+        // Fetch completed attempts with just the fields we need
+        $sql = "
+            SELECT h.score, h.start_time, h.end_time, h.date, 
+                   u.name AS student_name, q.subject AS exam_title
+            FROM history h
+            JOIN `user` u ON u.email = h.email
+            JOIN quiz q ON q.eid = h.eid
+            WHERE h.completed = 1
+            ORDER BY h.date DESC
+        ";
+
+        $result = mysqli_query($con, $sql) or die('Error fetching results');
+
+        echo '<div class="main-content-spaced">
+                <div class="card shadow-sm mb-4">
+                  <div class="card-header rank-card-header bg-success text-white d-flex align-items-center">
+                    <i class="bi bi-list-check me-2"></i>
+                    <span class="fs-5 fw-bold">Results</span>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-striped table-hover mb-0 align-middle">
+                        <thead class="table-primary">
+                          <tr>
+                            <th>S.N.</th>
+                            <th>Student</th>
+                            <th>Exam</th>
+                            <th>Score</th>
+                            <th>Duration</th>
+                            <th>Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>';
+
+        $c = 1;
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $student = htmlspecialchars($row['student_name'] ?? '-', ENT_QUOTES);
+                $exam    = htmlspecialchars($row['exam_title'] ?? '-', ENT_QUOTES);
+                $score   = is_null($row['score']) ? '-' : (int)$row['score'];
+
+                // duration
+                $start = !empty($row['start_time']) ? (int)$row['start_time'] : null;
+                $end   = !empty($row['end_time'])   ? (int)$row['end_time']   : null;
+                $duration = '-';
+                if ($start && $end && $end > $start) {
+                    $sec = $end - $start;
+                    $h = floor($sec / 3600);
+                    $m = floor(($sec % 3600) / 60);
+                    $s = $sec % 60;
+                    $duration = sprintf('%02d:%02d:%02d', $h, $m, $s);
+                }
+
+                // exam date
+                $dateStr = !empty($row['date']) ? date("d-m-Y H:i:s", strtotime($row['date'])) : '-';
+
+                echo '<tr>
+                        <td>' . $c++ . '</td>
+                        <td>' . $student . '</td>
+                        <td>' . $exam . '</td>
+                        <td>' . $score . '</td>
+                        <td>' . $duration . '</td>
+                        <td>' . $dateStr . '</td>
+                      </tr>';
+            }
+        } else {
+            echo '<tr><td colspan="6" class="text-center">No completed results found.</td></tr>';
+        }
+
+        echo '          </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>';
+    }
+}
+?>
+
 
 
 <!--feedback start-->
@@ -573,6 +1058,7 @@ if(@$_GET['q']==4 && !(@$_GET['step']) ) {
 if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
     $n   = intval($_GET['n'] ?? 0);
     $eid = htmlspecialchars($_GET['eid'] ?? '', ENT_QUOTES);
+  
 ?>
     <div class="main-content-spaced">
       <div class="card shadow-sm mb-4">
@@ -590,7 +1076,52 @@ if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
           <form action="update.php?q=addqns&n=<?= $n ?>&eid=<?= $eid ?>&ch=4" 
                 method="POST" id="questionsForm">
 
-            <?php for ($i = 1; $i <= $n; $i++): ?>
+              <?php 
+            for ($i = 1; $i <= $n; $i++): 
+              // Fetch existing question for this serial number
+             $q_check = mysqli_query($con, "SELECT * FROM questions WHERE eid='$eid' AND sn='$i'");
+$qrow = mysqli_fetch_assoc($q_check);
+
+$qns = $qrow['qns'] ?? '';
+$qid = $qrow['qid'] ?? '';
+
+// fetch options
+$options = [];
+if ($qid) {
+    $opt_res = mysqli_query($con, "SELECT * FROM options WHERE qid='$qid' ORDER BY optionid ASC");
+
+    while ($opt = mysqli_fetch_assoc($opt_res)) {
+        $options[$opt['optionid']] = $opt['option'];
+    }
+
+    // fetch answer
+    $ans_res = mysqli_query($con, "SELECT ansid FROM answer WHERE qid='$qid' LIMIT 1");
+    $ans_row = mysqli_fetch_assoc($ans_res);
+    $correctAnsId = $ans_row['ansid'] ?? '';
+}
+
+// default empty
+$optiona = $optionb = $optionc = $optiond = '';
+
+// assign options in order found
+$optValues = array_values($options);
+if (isset($optValues[0])) $optiona = $optValues[0];
+if (isset($optValues[1])) $optionb = $optValues[1];
+if (isset($optValues[2])) $optionc = $optValues[2];
+if (isset($optValues[3])) $optiond = $optValues[3];
+
+
+// map correct answer to letter
+$answer = '';
+if (!empty($correctAnsId)) {
+    $keys = array_keys($options);
+    $index = array_search($correctAnsId, $keys);
+    if ($index !== false) {
+        $answer = ['a','b','c','d'][$index];
+    }
+}
+
+            ?>
               <div class="question-block" id="question-<?= $i ?>" style="display: <?= $i === 1 ? 'block' : 'none' ?>;">
                 <h5 class="fw-bold mb-3">Question <?= $i ?></h5>
 
@@ -598,41 +1129,48 @@ if (@$_GET['q'] == 4 && (@$_GET['step']) == 2) {
                 <div class="mb-4">
                   <label class="form-label">Question Text <small class="text-danger">*</small></label>
                   <textarea rows="3" name="qns<?= $i ?>" class="form-control" 
-                    placeholder="Write question number <?= $i ?> here..." required></textarea>
+                    placeholder="Write question number <?= $i ?> here..." required><?= htmlspecialchars($qns) ?></textarea>
                 </div>
+                <!-- Hidden QID (important for updates) -->
+              <input type="hidden" name="qid<?= $i ?>" value="<?= htmlspecialchars($qid) ?>">
+
 
                 <!-- Options -->
-                <div class="row g-3 mb-4">
+               <div class="row g-3 mb-4">
                   <div class="col-md-6">
                     <label class="form-label">Option A *</label>
-                    <input type="text" name="<?= $i ?>1" class="form-control" placeholder="Enter option A" required>
+                    <input type="text" name="<?= $i ?>1" class="form-control" 
+                          value="<?= htmlspecialchars($optiona) ?>" placeholder="Enter option A" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option B *</label>
-                    <input type="text" name="<?= $i ?>2" class="form-control" placeholder="Enter option B" required>
+                    <input type="text" name="<?= $i ?>2" class="form-control" 
+                          value="<?= htmlspecialchars($optionb) ?>" placeholder="Enter option B" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option C *</label>
-                    <input type="text" name="<?= $i ?>3" class="form-control" placeholder="Enter option C" required>
+                    <input type="text" name="<?= $i ?>3" class="form-control" 
+                          value="<?= htmlspecialchars($optionc) ?>" placeholder="Enter option C" required>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Option D *</label>
-                    <input type="text" name="<?= $i ?>4" class="form-control" placeholder="Enter option D" required>
+                    <input type="text" name="<?= $i ?>4" class="form-control" 
+                          value="<?= htmlspecialchars($optiond) ?>" placeholder="Enter option D" required>
                   </div>
                 </div>
 
                 <!-- Correct Answer -->
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Correct Answer *</label>
-                  <select name="ans<?= $i ?>" class="form-select" required>
-                    <option value="">Select correct option...</option>
-                    <option value="a">Option A</option>
-                    <option value="b">Option B</option>
-                    <option value="c">Option C</option>
-                    <option value="d">Option D</option>
-                  </select>
-                </div>
-              </div>
+               <div class="mb-3">
+    <label class="form-label fw-bold">Correct Answer *</label>
+    <select name="ans<?= $i ?>" class="form-select" required>
+      <option value="">Select correct option...</option>
+      <option value="a" <?= $answer == 'a' ? 'selected' : '' ?>>Option A</option>
+      <option value="b" <?= $answer == 'b' ? 'selected' : '' ?>>Option B</option>
+      <option value="c" <?= $answer == 'c' ? 'selected' : '' ?>>Option C</option>
+      <option value="d" <?= $answer == 'd' ? 'selected' : '' ?>>Option D</option>
+    </select>
+  </div>
+</div>
             <?php endfor; ?>
 
             <!-- Navigation -->
@@ -707,7 +1245,8 @@ echo  '<div class="main-content-spaced">
 <td><b>Total question</b></td>
 <td><b>Marks</b></td>
 <td><b>Time limit</b></td>
-<td><b>Action</b></td>
+<td><b>Delete</b></td>
+<td><b>Edit</b></td>
 </tr>
 </thead>';
 $c=1;
@@ -725,11 +1264,100 @@ while($row = mysqli_fetch_array($result)) {
   <td>'.$total.'</td>
   <td>'.$sahi*$total.'</td>
   <td>'.$time.'&nbsp;min</td>
-	<td><b><a href="update.php?q=rmquiz&eid='.$eid.'" class="pull-right btn sub1" style="margin:0px;background:red"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;<span class="title1"><b>Remove</b></span></a></b></td></tr>';
+	<td>
+  <b><a href="update.php?q=rmquiz&eid='.$eid.'" class="pull-right btn sub1" style="margin:0px;background:red"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span>&nbsp;<span class="title1"><b>Remove</b></span></a></b>
+  </td>
+  <td>
+ <a href="dash.php?q=editexam&eid=' . $eid . '" class="btn btn-warning btn-sm">
+    <i class="bi bi-pencil-square"></i> Edit
+  </a>
+</td>
+
+  </tr>';
+
+  
+ 
 }
 $c=0;
 echo '</table></div></div>';
 
+}
+?>
+
+<!-- Edit Exam -->
+ <?php
+if (@$_GET['q'] == 'editexam' && isset($_GET['eid'])) {
+    $eid = $_GET['eid'];
+    $result = mysqli_query($con, "SELECT * FROM quiz WHERE eid='$eid'") or die('Error');
+    if ($row = mysqli_fetch_array($result)) {
+        ?>
+        <div class="main-content-spaced">
+          <div class="card shadow-sm mb-4">
+            <div class="card-header exam-card-header bg-warning text-white d-flex align-items-center">
+              <i class="bi bi-pencil-square me-2"></i>
+              <span class="fs-5 fw-bold">Edit Exam</span>
+            </div>
+            <div class="card-body">
+              <form action="update.php?q=editexam&eid=<?php echo $eid; ?>" method="POST" class="row g-3">
+
+                <!-- Title -->
+                <div class="col-md-8">
+                  <label class="form-label">Exam Title</label>
+                  <input type="text" name="title" value="<?php echo htmlspecialchars($row['title']); ?>" class="form-control" required>
+                </div>
+
+                <!-- Subject -->
+                <div class="col-md-4">
+                  <label class="form-label">Subject Area</label>
+                  <input type="text" name="subject" value="<?php echo htmlspecialchars($row['subject']); ?>" class="form-control" required>
+                </div>
+
+                <!-- Total Questions -->
+                <div class="col-md-3">
+                  <label class="form-label">Total Questions</label>
+                  <input type="number" name="total" value="<?php echo $row['total']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Time -->
+                <div class="col-md-3">
+                  <label class="form-label">Time Limit (minutes)</label>
+                  <input type="number" name="time" value="<?php echo $row['time']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Correct -->
+                <div class="col-md-3">
+                  <label class="form-label">Marks per Correct</label>
+                  <input type="number" name="sahi" value="<?php echo $row['sahi']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Wrong -->
+                <div class="col-md-3">
+                  <label class="form-label">Wrong Penalty</label>
+                  <input type="number" name="wrong" value="<?php echo $row['wrong']; ?>" class="form-control" required>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                  <label class="form-label">Description</label>
+                  <textarea name="intro" class="form-control" rows="3"><?php echo htmlspecialchars($row['intro']); ?></textarea>
+                </div>
+
+                <!-- Tag -->
+                <div class="col-md-6">
+                  <label class="form-label">Tag</label>
+                  <input type="text" name="tag" value="<?php echo htmlspecialchars($row['tag']); ?>" class="form-control">
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                  <button type="submit" class="btn btn-success">Update Exam</button>
+                  <a href="dash.php?q=5" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <?php
+    }
 }
 ?>
 
@@ -782,8 +1410,6 @@ document.addEventListener('click', function (e) {
   feedbackModal.show();
 });
 </script>
-
-
 
 
 

@@ -126,63 +126,107 @@ if ($action === 'addqns') {
     $total = intval($_GET['n'] ?? 0);
 
     if ($eid === '' || $total <= 0) {
-        echo "Invalid request: missing eid or total questions.";
+        echo "Invalid request";
         exit;
     }
 
     for ($i = 1; $i <= $total; $i++) {
-        $qid = uniqid('qid_', true);
         $qns = trim($_POST['qns'.$i] ?? '');
-
         $optA = trim($_POST[$i.'1'] ?? '');
         $optB = trim($_POST[$i.'2'] ?? '');
         $optC = trim($_POST[$i.'3'] ?? '');
         $optD = trim($_POST[$i.'4'] ?? '');
         $ansLetter = strtolower(trim($_POST['ans'.$i] ?? ''));
 
+        // ✅ get qid for this question (hidden field in form)
+        $qid = $_POST['qid'.$i] ?? '';
+
         if ($qns === '' || $optA === '' || $optB === '' || $optC === '' || $optD === '' || $ansLetter === '') {
-            continue; // skip incomplete question
+            continue;
         }
 
-        // Insert into questions
-        $stmtQ = $con->prepare("INSERT INTO questions (eid, qid, qns, sn) VALUES (?, ?, ?, ?)");
-        $stmtQ->bind_param("sssi", $eid, $qid, $qns, $i);
-        $stmtQ->execute();
-        $stmtQ->close();
+        if ($qid !== '') {
+            // 🔹 UPDATE MODE
+            $stmt = $con->prepare("UPDATE questions SET qns=? WHERE qid=?");
+            $stmt->bind_param("ss", $qns, $qid);
+            $stmt->execute();
+            $stmt->close();
 
-        // Insert options
-        $options = [
-            'a' => $optA,
-            'b' => $optB,
-            'c' => $optC,
-            'd' => $optD,
-        ];
+            // fetch existing options
+            $o = $con->prepare("SELECT optionid FROM options WHERE qid=? ORDER BY optionid ASC");
+            $o->bind_param("s", $qid);
+            $o->execute();
+            $res = $o->get_result();
+            $existing = $res->fetch_all(MYSQLI_ASSOC);
+            $o->close();
 
-        $correctOptionId = null;
-        foreach ($options as $letter => $text) {
-            $optionid = uniqid('opt_', true);
-            $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
-            $stmtO->bind_param("sss", $qid, $optionid, $text);
-            $stmtO->execute();
-            $stmtO->close();
+            $letters = ['a'=>$optA, 'b'=>$optB, 'c'=>$optC, 'd'=>$optD];
+            $i2 = 0; 
+            $correctOptionId = null;
 
-            if ($letter === $ansLetter) {
-                $correctOptionId = $optionid;
+            foreach ($letters as $letter=>$text) {
+                $optionid = $existing[$i2]['optionid'] ?? uniqid('opt_',true);
+
+                if (isset($existing[$i2])) {
+                    $stmtO = $con->prepare("UPDATE options SET option=? WHERE optionid=?");
+                    $stmtO->bind_param("ss", $text, $optionid);
+                } else {
+                    $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
+                    $stmtO->bind_param("sss", $qid, $optionid, $text);
+                }
+                $stmtO->execute();
+                $stmtO->close();
+
+                if ($letter === $ansLetter) {
+                    $correctOptionId = $optionid;
+                }
+                $i2++;
             }
-        }
 
-        // Insert correct answer
-        if ($correctOptionId !== null) {
-            $stmtA = $con->prepare("INSERT INTO answer (qid, ansid) VALUES (?, ?)");
-            $stmtA->bind_param("ss", $qid, $correctOptionId);
-            $stmtA->execute();
-            $stmtA->close();
+            if (!empty($correctOptionId)) {
+                $stmtA = $con->prepare("UPDATE answer SET ansid=? WHERE qid=?");
+                $stmtA->bind_param("ss", $correctOptionId, $qid);
+                $stmtA->execute();
+                $stmtA->close();
+            }
+
+        } else {
+            // 🔹 INSERT MODE
+            $qid = uniqid('qid_', true);
+            $stmtQ = $con->prepare("INSERT INTO questions (eid, qid, qns, sn) VALUES (?, ?, ?, ?)");
+            $stmtQ->bind_param("sssi", $eid, $qid, $qns, $i);
+            $stmtQ->execute();
+            $stmtQ->close();
+
+            $letters = ['a'=>$optA, 'b'=>$optB, 'c'=>$optC, 'd'=>$optD];
+            $correctOptionId = null;
+
+            foreach ($letters as $letter=>$text) {
+                $optionid = uniqid('opt_', true);
+                $stmtO = $con->prepare("INSERT INTO options (qid, optionid, option) VALUES (?, ?, ?)");
+                $stmtO->bind_param("sss", $qid, $optionid, $text);
+                $stmtO->execute();
+                $stmtO->close();
+
+                if ($letter === $ansLetter) {
+                    $correctOptionId = $optionid;
+                }
+            }
+
+            if ($correctOptionId) {
+                $stmtA = $con->prepare("INSERT INTO answer (qid, ansid) VALUES (?, ?)");
+                $stmtA->bind_param("ss", $qid, $correctOptionId);
+                $stmtA->execute();
+                $stmtA->close();
+            }
         }
     }
 
     header("Location: dash.php?q=0");
     exit;
 }
+
+
 
 
 
@@ -253,6 +297,29 @@ if ($action === 'rmquiz') {
     }
 }
 
+ // ------------------------ ADMIN: Edit Question ------------------------
+ if (@$_GET['q'] == 'editexam' && isset($_GET['eid'])) {
+    $eid     = $_GET['eid'];
+    $title   = $_POST['title'];
+    $subject = $_POST['subject'];
+    $sahi    = $_POST['sahi'];
+    $wrong   = $_POST['wrong'];
+    $total   = $_POST['total'];
+    $time    = $_POST['time'];
+    $intro   = $_POST['intro'];
+    $tag     = $_POST['tag'];
+
+    $query = "UPDATE quiz 
+              SET title='$title', subject='$subject', sahi='$sahi', wrong='$wrong', 
+                  total='$total', time='$time', intro='$intro', tag='$tag' 
+              WHERE eid='$eid'";
+
+    mysqli_query($con, $query) or die('Error updating exam');
+
+    // After update → redirect to add/edit questions form
+    header("Location: dash.php?q=4&step=2&eid=$eid&n=$total");
+    exit();
+}
 
 
 // ------------------------ ADMIN: Delete feedback ------------------------
@@ -267,6 +334,91 @@ if ($action === 'fdid' || isset($_REQUEST['fdid'])) {
     header("Location: dash.php?q=3");
     exit;
 }
+
+// ------------------------ ADMIN: Delete User ------------------------
+if ($action === 'deluser' && isset($_GET['email'])) {
+    if (!isAdmin()) {
+        $_SESSION['flash_error'] = "Permission denied: admin required.";
+        header("Location: dash.php?q=1"); // back to users page
+        exit;
+    }
+
+    $studentEmail = trim($_GET['email']);
+    if ($studentEmail === '') {
+        $_SESSION['flash_error'] = "Invalid request: missing email.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    // Prevent admin deleting themselves
+    if ($studentEmail === $_SESSION['email']) {
+        $_SESSION['flash_error'] = "You cannot delete your own account.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    // Delete student account
+    $stmt = $con->prepare("DELETE FROM user WHERE email=?");
+    if ($stmt) {
+        $stmt->bind_param("s", $studentEmail);
+        if ($stmt->execute()) {
+            $_SESSION['flash_success'] = "Student account deleted successfully.";
+        } else {
+            $_SESSION['flash_error'] = "Failed to delete student account.";
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['flash_error'] = "Server error: could not prepare delete.";
+    }
+
+    header("Location: dash.php?q=1"); // redirect back to user list
+    exit;
+}
+
+// ------------------------ ADMIN: Edit User ------------------------
+if ($action === 'edituser' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isAdmin()) {
+        $_SESSION['flash_error'] = "Permission denied: admin only.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    $oldEmail = trim($_POST['old_email']);
+    $name     = trim($_POST['name']);
+    $mob      = trim($_POST['mob']);
+    $email    = trim($_POST['email']);
+    $gender   = trim($_POST['gender']);
+    $password = trim($_POST['password']);  // may be empty
+
+    if ($oldEmail === '' || $name === '' || $mob === '' || $email === '' || $gender === '') {
+        $_SESSION['flash_error'] = "All required fields must be filled.";
+        header("Location: dash.php?q=1");
+        exit;
+    }
+
+    if ($password !== '') {
+        // hash the new password before saving
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $con->prepare("UPDATE user SET name=?, mob=?, email=?, password=?, gender=? WHERE email=?");
+        $stmt->bind_param("ssssss", $name, $mob, $email, $hashed, $gender, $oldEmail);
+    } else {
+        // update everything except password
+        $stmt = $con->prepare("UPDATE user SET name=?, mob=?, email=?, gender=? WHERE email=?");
+        $stmt->bind_param("sssss", $name, $mob, $email, $gender, $oldEmail);
+    }
+
+    if ($stmt && $stmt->execute()) {
+        $_SESSION['flash_success'] = "User details updated successfully.";
+    } else {
+        $_SESSION['flash_error'] = "Failed to update user.";
+    }
+    if ($stmt) $stmt->close();
+
+    header("Location: dash.php?q=1");
+    exit;
+}
+
+
 
 // ------------------------ STUDENT: Start exam (optional) ------------------------
 if ($action === 'exam' || (isset($_GET['q']) && $_GET['q'] === 'exam')) {
@@ -457,151 +609,7 @@ if (
 
 
 
-   // Ensure history exists — insert a stub row if missing but DO NOT set score here
-$stmt = $con->prepare("SELECT * FROM history WHERE eid=? AND email=? LIMIT 1");
-$stmt->bind_param("ss", $eid, $email);
-$stmt->execute();
-$res = $stmt->get_result();
-if ($res->num_rows === 0) {
-    // Insert stub row without score/level so score stays NULL until completion
-    $stmtIns = $con->prepare("INSERT INTO history (email, eid, date) VALUES (?, ?, NOW())");
-    $stmtIns->bind_param("ss", $email, $eid);
-    $stmtIns->execute();
-    $stmtIns->close();
-
-    // reselect
-    $stmt->execute();
-    $res = $stmt->get_result();
-}
-$stmt->close();
-
-
-    $rowH = $res->fetch_assoc();
-    // NOTE: history columns assumed: email,eid,score,level,sahi,wrong,date
-    $correct_count = (int)($rowH['sahi'] ?? 0);
-    $wrong_count   = (int)($rowH['wrong'] ?? 0);
-
-    // Update counts based on this response
-    if ($selected_ans !== '') {
-        // The student's posted 'ans' should be the option's optionid (string).
-        if ($selected_ans === $correct_ansid) {
-            $correct_count++;
-        } else {
-            $wrong_count++;
-        }
-    } // unanswered -> remain uncounted
-
-    $attempted = $correct_count + $wrong_count;
-
-    // compute score
-    $computed_score = ($correct_count * $marks_per_correct) - ($wrong_count * $penalty_per_wrong);
-    if ($computed_score < 0) $computed_score = 0;
-
-    // Persist progress only — do NOT set score until final submission / timeout
-$stmt = $con->prepare("UPDATE history SET level=?, sahi=?, wrong=?, date=NOW() WHERE email=? AND eid=?");
-$stmt->bind_param("iiiss", $attempted, $correct_count, $wrong_count, $email, $eid);
-$stmt->execute();
-$stmt->close();
-
-
-    // If not last question, go to next
-    if ($sn < $total) {
-        $next = $sn + 1;
-        header("Location: account.php?q=quiz&step=2&eid=" . rawurlencode($eid) . "&n=" . $next . "&t=" . $total . "&time=" . intval($quizTime));
-        exit;
-    }
-
-    // Last question: finalize rank (avoid double counting if already finalized)
-    $stmt = $con->prepare("SELECT level, sahi, wrong FROM history WHERE eid=? AND email=? LIMIT 1");
-    $stmt->bind_param("ss", $eid, $email);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $h_level = $h_sahi = $h_wrong = 0;
-    if ($res && $res->num_rows) {
-        $r = $res->fetch_assoc();
-        $h_level = (int)$r['level'];
-        $h_sahi = (int)$r['sahi'];
-        $h_wrong = (int)$r['wrong'];
-    }
-    $stmt->close();
-
-   // compute final score (you already have this)
-$finalScore = ($h_sahi * $marks_per_correct) - ($h_wrong * $penalty_per_wrong);
-if ($finalScore < 0) $finalScore = 0;
-
-$alreadyFinished = !empty($rowH['completed']); // new flag check
-
-if (!$alreadyFinished) {
-    // Start transaction so history + rank updates are atomic
-    if (!$con->begin_transaction()) {
-        error_log("[quiz-finalize] failed to start transaction: " . $con->error);
-        // fallback: try best-effort, but better to show error
-    }
-
-    try {
-         // 1) Persist final score into history and mark completed
-        $stmtFinal = $con->prepare(
-            "UPDATE history SET score=?, level=?, sahi=?, wrong=?, completed=1, date=NOW() WHERE email=? AND eid=?"
-        );
-        if ($stmtFinal === false) throw new Exception("prepare failed: " . $con->error);
-        $stmtFinal->bind_param("iiiiss", $finalScore, $attempted, $h_sahi, $h_wrong, $email, $eid);
-        $stmtFinal->execute();
-        $stmtFinal->close();
-
-        // 2) Update rank
-        $stmt = $con->prepare("SELECT score FROM rank WHERE email=? LIMIT 1");
-        if ($stmt === false) throw new Exception("prepare failed: " . $con->error);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $res = $stmt->get_result();
-
-        if ($res->num_rows === 0) {
-            $stmtIns = $con->prepare("INSERT INTO rank (email, score, time) VALUES (?, ?, NOW())");
-            if ($stmtIns === false) throw new Exception("prepare failed: " . $con->error);
-            $stmtIns->bind_param("si", $email, $finalScore);
-            if (!$stmtIns->execute()) throw new Exception("rank insert failed: " . $stmtIns->error);
-            $stmtIns->close();
-        } else {
-            $existing = (int)$res->fetch_assoc()['score'];
-            $newScore = max(0, $existing + (int)$finalScore);
-            $stmtUpd = $con->prepare("UPDATE rank SET score=?, time=NOW() WHERE email=?");
-            if ($stmtUpd === false) throw new Exception("prepare failed: " . $con->error);
-            $stmtUpd->bind_param("is", $newScore, $email);
-            if (!$stmtUpd->execute()) throw new Exception("rank update failed: " . $stmtUpd->error);
-            $stmtUpd->close();
-        }
-        $stmt->close();
-
-        // 3) commit
-        if (!$con->commit()) throw new Exception("commit failed: " . $con->error);
-
-    } catch (Exception $ex) {
-        // rollback and log
-        $con->rollback();
-        error_log("[quiz-finalize] exception: " . $ex->getMessage());
-        // Optionally set a flash message / show user friendly error
-        $_SESSION['flash_error'] = "Server error while finalizing exam. Please contact admin.";
-        header("Location: account.php?q=result&eid=" . rawurlencode($eid));
-        exit;
-    }
-}
-
-
-// server-side cleanup and redirect (same as yours)
-if (!empty($_SESSION['exam_start']) && isset($_SESSION['exam_start'][$eid])) {
-    unset($_SESSION['exam_start'][$eid]);
-}
-if ($isAjax) {
-   header('Content-Type: application/json');
-   echo json_encode(['completed' => true]);
-   exit;
-} else {
-   // old HTML redirect
-   echo '<!doctype html><html><head>...<script>window.location.href=...</script></head></html>';
-   exit;
-}
-
-exit;
+  
 
 
 // -------------------- STUDENT: TIMEOUT FINALIZATION --------------------
@@ -658,7 +666,10 @@ if (!empty($_GET['q']) && $_GET['q'] === 'timeout' && !empty($_GET['eid'])) {
     if ($computed_score < 0) $computed_score = 0;
 
     // persist history
-    $stmt = $con->prepare("UPDATE history SET score=?, level=?, sahi=?, wrong=?, date=NOW() WHERE email=? AND eid=?");
+    $stmt = $con->prepare("UPDATE history 
+SET score=?, level=?, sahi=?, wrong=?, completed=1, date=NOW() 
+WHERE email=? AND eid=? AND (completed IS NULL OR completed=0)
+");
     $stmt->bind_param("iiiiss", $computed_score, $attempted, $correct_count, $wrong_count, $email, $eid);
     $stmt->execute();
     $stmt->close();
