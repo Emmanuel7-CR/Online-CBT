@@ -3,21 +3,22 @@
 body {
   overflow-x: hidden;
   width: 100%;
-  font: 15px "Century Gothic", "Times Roman", sans-serif;
   min-height: 550px;
   transition: padding-top 0.15s ease;
+   background: linear-gradient(135deg, #00416A, #198754);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 /* Put in your main.css */
 
 
-/* Background image for main section */
+/* Background image for main section 
 .bg1 {
   background: url("../image/background-img.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   min-height: 535px;
-}
+} */
 
 /* ===== Fonts ===== */
 @font-face {

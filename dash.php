@@ -1,40 +1,20 @@
 <?php
- include_once 'dbConnection.php';
 session_start();
-$email=$_SESSION['email'];
+include_once 'dbConnection.php';
 
-// --- determine if current user is admin ---
-$isAdmin = false;
-if (isset($email) && $email) {
-    // Try to read role from user table (preferred)
-    $safeEmail = mysqli_real_escape_string($con, $email);
-    $r = mysqli_query($con, "SELECT role FROM user WHERE email='$safeEmail' LIMIT 1");
-    if ($r && mysqli_num_rows($r) > 0) {
-        $rowRole = mysqli_fetch_assoc($r);
-        // if your user table uses 'role' column and stores 'admin' for admins
-        if (isset($rowRole['role']) && strtolower($rowRole['role']) === 'admin') {
-            $isAdmin = true;
-        }
-    }
-
-    // Fallback: if there is no role column, check specific admin emails (adjust as needed)
-    if (!$isAdmin) {
-        $admins = ['sunnygkp10@gmail.com']; // <-- replace with real admin email(s)
-        if (in_array($email, $admins, true)) $isAdmin = true;
-    }
+// Ensure login
+if (!isset($_SESSION['email'])) {
+    header("Location: index.php");
+    exit;
 }
 
-  if(!(isset($_SESSION['email']))){
-header("location:index.php");
-
-}
-else
-{
-$name = $_SESSION['name'];;
+$email   = $_SESSION['email'];
+$name    = $_SESSION['name'] ?? '';
+$role    = $_SESSION['role'] ?? '';
+$isAdmin = ($role === 'admin');   // true if role = "admin"
 
 
-echo '<span class="pull-right top title1" ><span class="log1"><span class="glyphicon glyphicon-user" aria-hidden="true"></span>&nbsp;&nbsp;&nbsp;&nbsp;Hello,</span> <a href="account.php" class="log log1">'.$name.'</a>&nbsp;|&nbsp;<a href="logout.php?q=account.php" class="log"><span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>&nbsp;Signout</button></a></span>';
-}?>
+?>
 <?php
 if (!empty($_SESSION['flash_success'])) {
     echo '<div class="alert alert-success">'.htmlspecialchars($_SESSION['flash_success']).'</div>';

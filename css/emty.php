@@ -1,4 +1,3 @@
-I want to add a modal to my project. When the user clicks on Submit the Exam, a modal should appear confirming if the user wants to submit the exam. And when the user clicks Yes, Submit Exam, the exam should be submitted normally as it would. But the Exam Confirm Submit modal should not interfere with the timer. When the timer elapses, it should behave as it normally does, which is to automatically submit the exam and then display the results. This is my code; 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +12,6 @@ I want to add a modal to my project. When the user clicks on Submit the Exam, a 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 
-
-
 <!-- Optional custom styles -->
 <link rel="stylesheet" href="css/account.css" />
 <link rel="stylesheet" href="css/font.css" />
@@ -22,11 +19,99 @@ I want to add a modal to my project. When the user clicks on Submit the Exam, a 
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet" type="text/css">
 
- <!--alert message-->
+<!--alert message-->
 <?php if(@$_GET['w'])
 {echo'<script>alert("'.@$_GET['w'].'");</script>';}
 ?>
 <!--alert message end-->
+
+<style>
+    /* Custom styles for the modal */
+    .modal-confirm {
+        color: #434e65;
+    }
+    .modal-confirm .modal-content {
+        padding: 20px;
+        border-radius: 5px;
+        border: none;
+    }
+    .modal-confirm .modal-header {
+        background: #47c9a2;
+        border-bottom: none;
+        position: relative;
+        text-align: center;
+        margin: -20px -20px 0;
+        border-radius: 5px 5px 0 0;
+        padding: 35px;
+    }
+    .modal-confirm h4 {
+        text-align: center;
+        font-size: 36px;
+        margin: 10px 0;
+    }
+    .modal-confirm .form-control, .modal-confirm .btn {
+        min-height: 40px;
+        border-radius: 3px; 
+    }
+    .modal-confirm .close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: #fff;
+        text-shadow: none;
+        opacity: 0.5;
+    }
+    .modal-confirm .close:hover {
+        opacity: 0.8;
+    }
+    .modal-confirm .icon-box {
+        color: #fff;		
+        width: 95px;
+        height: 95px;
+        display: inline-block;
+        border-radius: 50%;
+        z-index: 9;
+        border: 5px solid #fff;
+        padding: 15px;
+        text-align: center;
+    }
+    .modal-confirm .icon-box i {
+        font-size: 64px;
+        margin: -4px 0 0 -4px;
+    }
+    .modal-confirm.modal-dialog {
+        margin-top: 80px;
+    }
+    .modal-confirm .btn, .modal-confirm .btn:active {
+        color: #fff;
+        border-radius: 4px;
+        background: #eeb711 !important;
+        text-decoration: none;
+        transition: all 0.4s;
+        line-height: normal;
+        border-radius: 30px;
+        margin-top: 10px;
+        padding: 6px 20px;
+        border: none;
+    }
+    .modal-confirm .btn:hover, .modal-confirm .btn:focus {
+        background: #eda645 !important;
+        outline: none;
+    }
+    .modal-confirm .btn span {
+        margin: 1px 3px 0;
+        float: left;
+    }
+    .modal-confirm .btn i {
+        margin-left: 1px;
+        font-size: 20px;
+        float: right;
+    }
+    .trigger-btn {
+        display: inline-block;
+        margin: 100px auto;
+    }
+</style>
 </head>
 <?php
 include_once 'dbConnection.php';
@@ -231,30 +316,6 @@ if (!$completed) { ?>
       </div>
     </div>
     
-<!--<span id="countdown" class="timer"></span>
-<script>
-var seconds = 40;
-    function secondPassed() {
-    var minutes = Math.round((seconds - 30)/60);
-    var remainingSeconds = seconds % 60;
-    if (remainingSeconds < 10) {
-        remainingSeconds = "0" + remainingSeconds; 
-    }
-    document.getElementById('countdown').innerHTML = minutes + ":" +    remainingSeconds;
-    if (seconds == 0) {
-        clearInterval(countdownTimer);
-        document.getElementById('countdown').innerHTML = "Buzz Buzz";
-    } else {    
-        seconds--;
-    }
-    }
-var countdownTimer = setInterval('secondPassed()', 1000);
-</script>-->
-
-<!--END OF HOME TABLE-->
-
-
-
 <!--EXAM START-->
 <?php
 // get user email from session
@@ -326,7 +387,7 @@ echo "</pre>";
             "INSERT INTO history (email, eid, start_time, end_time) VALUES ('{$safeEmail}', '{$safeEid}', '{$safeStart}', '{$safeEnd}')"
         ) or die(mysqli_error($con));
     } else {
-        // already started → don’t overwrite start/end, just reuse end_time
+        // already started → don't overwrite start/end, just reuse end_time
         $row = mysqli_fetch_assoc($check2);
         $end_time = $row['end_time'];
     }
@@ -394,9 +455,6 @@ echo "</pre>";
             $sn = $index + 1;
             ?>
            
-         
-
-
             <div class="question-container" data-index="<?= $index ?>" data-qid="<?= htmlspecialchars($q['qid']) ?>" style="<?= $index === 0 ? '' : 'display:none;' ?>">
                 <div class="" >
                     <div class="card shadow-lg border-0 mb-4" >
@@ -405,8 +463,6 @@ echo "</pre>";
         <i class="bi bi-question-circle me-2"></i>
         Question <?= $sn ?> of <?= count($allQuestions) ?>
     </div>
-    <!-- Timer for this question -->
-    <!--<span class="badge bg-light fw-bold text-danger question-timer" data-index="<?= $index ?>">00:00:00</span> -->
 </div>
 
                     </div>
@@ -442,10 +498,34 @@ echo "</pre>";
             <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
 
             <!-- Submit will behave same as Next for last question -->
-            <button type="button" class="btn btn-success" id="submitBtn" style="display:none;">Submit</button>
+            <button type="button" class="btn btn-success" id="submitBtn" style="display:none;" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">Submit Exam</button>
         </div>
     </div>
 </form>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="submitConfirmModalLabel">Confirm Submission</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <div class="icon-box bg-success">
+            <i class="bi bi-question-circle text-white" style="font-size: 2.5rem;"></i>
+          </div>
+        </div>
+        <p class="text-center">Are you sure you want to submit your exam? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmSubmitBtn">Yes, Submit Exam</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* --- Defensive/debugging AJAX submit for quiz --- */
@@ -597,9 +677,17 @@ echo "</pre>";
   submitBtn.style.display = (index === containers.length - 1) ? '' : 'none';
 }
 
-  if (submitBtn) {
-    submitBtn.removeEventListener('click', submitCurrentQuestionAJAX);
-    submitBtn.addEventListener('click', function(){ submitCurrentQuestionAJAX(false); });
+  // Add event listener for the modal confirmation button
+  const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+  if (confirmSubmitBtn) {
+    confirmSubmitBtn.addEventListener('click', function() {
+      // Close the modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('submitConfirmModal'));
+      if (modal) modal.hide();
+      
+      // Submit the exam
+      submitCurrentQuestionAJAX(false);
+    });
   }
 
   if (prevBtn) {
@@ -793,17 +881,6 @@ echo '</table></div></div>';}
 
 </div></div></div></div>
 
-<!-- Time Up Modal -->
-<!-- <div class="modal fade" id="timeUpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-center p-4">
-      <h5 class="fw-bold mb-3">⏰ Time’s Up!</h5>
-      <p>Your exam time has ended.</p>
-      <p>Submitting automatically in <span id="timeUpCountdown">3</span> seconds...</p>
-    </div>
-  </div>
-</div>  -->
-
 <!-- Toast container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
   <div id="timeUpToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -839,126 +916,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-function startExamTimer(endTime) {
-    function getCurrentQuestionTimer() {
-    const currentContainer = containers[currentQuestion];
-    if (!currentContainer) return null;
-    return currentContainer.querySelector(".question-timer");
-}
-
-   
-
-    const examForm = document.getElementById("quizForm"); // ensure your <form id="quizForm"> exists
-    let interval;
-    let submitted = false; // prevent double-submit
-
-    function updateTimer() {
-    const now = Date.now();
-    const distance = endTime - now;
-
-    // Get the currently visible question container
-    const currentContainer = document.querySelector('.question-container:not([style*="display:none"])');
-    const timerElement = currentContainer ? currentContainer.querySelector(".question-timer") : null;
-
-    if (!timerElement) return; // exit if no timer element found
-
-    if (distance <= 0) {
-        timerElement.textContent = "00:00:00";
-        clearInterval(interval);
-
-        if (examForm && !submitted) {
-            submitted = true;
-            console.log("[Timer] ⏰ Time expired, preparing auto-submit…");
-
-         
-
-            // Optional beep
-            try {
-                const beep = new Audio("beep.mp3");
-                beep.play().catch(() => {});
-                console.log("[Timer] Beep sound attempted");
-            } catch (e) {
-                console.error("[Timer] Beep failed", e);
-            }
-
-            // Countdown in modal before submission
-            let countdown = 3;
-            const countdownEl = document.getElementById("timeUpCountdown");
-            if (countdownEl) countdownEl.textContent = countdown;
-
-            const countdownTimer = setInterval(() => {
-                countdown--;
-                if (countdownEl) countdownEl.textContent = Math.max(0, countdown);
-                console.log("[Timer] Modal countdown:", countdown);
-
-                if (countdown <= 0) {
-                    clearInterval(countdownTimer);
-                    console.log("[Timer] Countdown finished, submitting now…");
-
-                    // Use existing submit function if available
-                    if (typeof submitCurrentQuestion === "function") {
-                        try {
-                            console.log("[Timer] Calling submitCurrentQuestion()");
-                            submitCurrentQuestion();
-                        } catch (err) {
-                            console.error("[Timer] submitCurrentQuestion() failed", err);
-                        }
-                    } else if (examForm) {
-                        console.log("[Timer] Falling back to direct form.submit()");
-
-                        // capture current question info
-                        const qid = currentContainer ? encodeURIComponent(currentContainer.dataset.qid) : '';
-                        const sn = currentContainer ? parseInt(currentContainer.dataset.index || 0) + 1 : 1;
-                        const selected = currentContainer ? (currentContainer.querySelector('input[type="radio"]:checked') || { value: '' }).value : '';
-                        const hiddenAns = document.getElementById('hiddenAns');
-                        if (hiddenAns) hiddenAns.value = selected;
-
-                        console.log("[Timer] Captured ans=", selected, " qid=", qid, " sn=", sn);
-
-                        // force result redirect
-                        const eid = encodeURIComponent(<?= json_encode($eid) ?>);
-                        examForm.action = `update.php?q=result&eid=${eid}`;
-                        examForm.method = "POST";
-                        examForm.submit();
-                    } else {
-                        console.error("[Timer] ❌ No form found to submit!");
-                    }
-                }
-            }, 1000);
-
-        }
-        return;
-    }
-
-        // Normal ticking
-        const hours = Math.floor(distance / (1000 * 60 * 60));
-        const minutes = Math.floor((distance / (1000 * 60)) % 60);
-        const seconds = Math.floor((distance / 1000) % 60);
-
-        const format = n => String(n).padStart(2, "0");
-        timerElement.textContent = `${format(hours)}:${format(minutes)}:${format(seconds)}`;
-
-        // Pulse effect when <= 5 minutes
-        if (distance <= 5 * 60 * 1000) {
-            timerElement.classList.add("pulse");
-        } else {
-            timerElement.classList.remove("pulse");
-        }
-    }
-
-    // start
-    console.log("[Timer] Timer started, endTime=", new Date(endTime).toISOString());
-    updateTimer();
-    interval = setInterval(updateTimer, 1000);
-}
-
-// start the timer (examEndTime must be set by PHP earlier on the page)
-if (typeof examEndTime !== "undefined") {
-startExamTimer(examEndTime);
-}
-</script>
 
 <script>
 (function() {

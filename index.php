@@ -1,520 +1,418 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<?php
+// index.php - PTI CBT Portal (with Developers modal)
+// Converted from provided HTML to PHP while preserving styles, links, logic and markup.
+
+$pageTitle = "PTI Computer-Based Testing Portal — Petroleum Training Institute";
+$logoPath  = 'image/PTI.jpg';
+$year      = date('Y');
+?>
+<!doctype html>
+<html lang="en">
 <head>
- <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
-<title>Project Worlds || TEST YOUR SKILL </title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font: Inter (system fallback) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Link to Custom CSS-->
+   <link rel="stylesheet" href="css/styles.css">
 
-  <!-- Custom Styles -->
-  <link rel="stylesheet" href="css/index.css">
-  <link rel="stylesheet" href="css/font.css">
+  <!-- FontAwesome for optional icons (progressive enhancement) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-  <!-- Optional jQuery (kept only if other scripts rely on it) -->
-  <script src="js/jquery.js"></script>
+  <meta name="description" content="PTI Computer-Based Testing (CBT) Portal — secure, 24/7 accessible, with instant results and analytics for students and administrators." />
 
- <!-- Bootstrap Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Modal-specific styles (kept local so integrating this file is simple) -->
+  <style>
+    /* Modal overlay & card */
+    .dev-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 10, 18, 0.6);
+      display: none; /* shown when active */
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+      padding: 24px;
+      backdrop-filter: blur(6px) saturate(1.05);
+    }
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet">
+    .dev-modal-overlay.show {
+      display: flex;
+      animation: fadeIn .16s ease-out;
+    }
 
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
 
+    .dev-modal {
+      width: 100%;
+      max-width: 720px;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(8,20,40,0.25);
+      padding: 20px;
+      position: relative;
+      border: 1px solid rgba(10, 40, 80, 0.04);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
 
-<script>
-function validateForm() {var y = document.forms["form"]["name"].value;	var letters = /^[A-Za-z]+$/;if (y == null || y == "") {alert("Name must be filled out.");return false;}var z =document.forms["form"]["college"].value;if (z == null || z == "") {alert("college must be filled out.");return false;}var x = document.forms["form"]["email"].value;var atpos = x.indexOf("@");
-var dotpos = x.lastIndexOf(".");if (atpos<1 || dotpos<atpos+2 || dotpos+2>=x.length) {alert("Not a valid e-mail address.");return false;}var a = document.forms["form"]["password"].value;if(a == null || a == ""){alert("Password must be filled out");return false;}if(a.length<5 || a.length>25){alert("Passwords must be 5 to 25 characters long.");return false;}
-var b = document.forms["form"]["cpassword"].value;if (a!=b){alert("Passwords must match.");return false;}}
-</script>
+    .dev-modal header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
+    .dev-modal .title {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 700;
+      color: #07203a;
+    }
+
+    .dev-modal .subtitle {
+      font-size: 13px;
+      color: #4a6b8a;
+      margin-top: 2px;
+    }
+
+    .dev-modal .close-x {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      color: #6b7b8a;
+      cursor: pointer;
+    }
+
+    .dev-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+      margin-top: 12px;
+    }
+
+    .dev-card {
+      background: rgba(8,28,48,0.03);
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid rgba(8,28,48,0.04);
+    }
+
+    .dev-card h5 { margin: 0 0 6px 0; font-size: 14px }
+    .dev-card p { margin: 0; font-size: 13px; color: #32506a }
+
+    .dev-modal .actions {
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:18px;
+      align-items:center;
+    }
+
+    /* Make modal responsive */
+    @media (max-width:640px) {
+      .dev-modal { padding: 14px; border-radius: 10px }
+      .dev-grid { grid-template-columns: 1fr }
+      .dev-modal .actions { flex-direction: column-reverse; align-items: stretch }
+      .dev-modal .actions .btn { width: 100% }
+      .dev-modal .close-x { right: 10px; top: 10px }
+    }
+
+    /* Small helper for link-style button in footer */
+    .link-button {
+      background: none;
+      border: none;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+
+    .link-button:focus { outline: 3px solid rgba(3,102,214,0.12); }
+
+  </style>
 </head>
-
 <body>
- <!-- Header (Unified with feedback.php) -->
-<header>
-  <nav class="navbar navbar-dark bg-success fixed-top">
-    <div class="container-fluid">
-      <!-- Brand -->
-      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center gap-2" href="#">
-        <img src="image/PTI.jpg" alt="PTI Logo" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">
-        <span class="pti-full">Petroleum Training Institute</span>
-        <span class="pti-short d-none">PTI</span>
+  <div class="site" role="main">
+
+    <!-- Header -->
+    <header class="header" role="banner" aria-label="PTI CBT header">
+      <a href="#" class="brand" aria-label="PTI home link">
+        <!-- logo mark (SVG-like glyph inside box) -->
+        
+          <img src="<?php echo htmlspecialchars($logoPath); ?>" alt="PTI logo" class="logo">
+       
+        <div class="brand-text">
+          <h1>Petroleum Training Institute</h1>
+          <p>CBT Portal — Assessment &amp; Certification</p>
+        </div>
       </a>
 
-      <!-- Desktop Nav (visible on md+ screens) -->
-      <ul class="navbar-nav ms-auto d-none d-custom-flex flex-row gap-3">
-        <li class="nav-item"><a class="nav-link text-white" href="#admin-pane" id="footer-admin-link">Admin Login</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="feedback.php">Feedback</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#" data-bs-toggle="modal" data-bs-target="#developers">Developers</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#">About us</a></li>
-      </ul>
-
-      <!-- Offcanvas Toggler (mobile only) -->
-      <button class="navbar-toggler d-custom-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sideNav" aria-controls="sideNav" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+      <!-- Mobile menu toggle -->
+      <button class="mobile-toggle" id="mobileToggle" aria-expanded="false" aria-controls="primaryNav" title="Toggle navigation">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        <span class="sr-only">Toggle navigation</span>
       </button>
 
-      <!-- Offcanvas Side Nav -->
-      <div class="offcanvas offcanvas-start bg-success text-white" tabindex="-1" id="sideNav" aria-labelledby="sideNavLabel">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="sideNavLabel">Menu</h5>
-          <button type="button" class="btn-close btn-close-white text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <nav id="primaryNav" aria-label="Primary">
+        <div class="nav-links" id="navLinks">
+          <a href="admin-login.php" class="btn-admin" title="Admin Portal (placeholder)">Admin Portal</a>
+          <a href="user-login.php" class="login-link">Student Login</a>
+          <a href="user-signup.php" class="signup-link">Student Signup</a>
         </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav flex-column gap-2">
-            <li class="nav-item"><a class="nav-link text-white" href="#admin-pane" id="footer-admin-link">Admin Login</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="feedback.php">Feedback</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#" data-bs-toggle="modal" data-bs-target="#developers">Developers</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#">About us</a></li>
-          </ul>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="heroHeading">
+      <div class="hero-card" role="region" aria-label="Main introduction">
+        <div class="eyebrow" aria-hidden="true">
+          <span class="pill"><i class="fa-solid fa-shield-halved" style="font-size:12px"></i> Secure &amp; Accredited</span>
+          <small class="muted">CBT center • Remote proctoring ready</small>
+        </div>
+
+        <h2 id="heroHeading">PTI Computer-Based Testing Portal</h2>
+        <p class="lead">Empowering the future of energy through advanced assessments. Take secure exams, track progress, and receive instant results — designed for students and educators at the Petroleum Training Institute.</p>
+
+        <div class="cta-group" role="group" aria-label="Primary call to actions">
+          <a class="btn btn-primary" href="user-login.php" title="Student Login">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+            Student Login
+          </a>
+          <a class="btn btn-ghost" href="user-signup.php" title="Student Signup">
+            <i class="fa-regular fas fa-pencil-alt" aria-hidden="true"></i>
+            Student Signup
+          </a>
+         
+        </div>
+
+        <!-- short accessibility / trust strip -->
+        <div style="margin-top:22px;display:flex;gap:12px;flex-wrap:wrap">
+          <small class="muted"><strong>Exam Window:</strong> 24/7 availability</small>
+          <small class="muted">•</small>
+          <small class="muted"><strong>Support:</strong> support@pti.edu.ng (placeholder)</small>
         </div>
       </div>
+
+      <!-- Right visual column: stats + illustration -->
+      
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="features" aria-label="CBT features & benefits">
+      <!-- Feature 1 -->
+      <div class="feature">
+        <!-- Inline SVG icon (accessibility friendly) -->
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" role="img" focusable="false">
+          <rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" opacity="0.08"></rect>
+          <path d="M8 12h8M8 16h8M8 8h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <div>
+          <h4>24/7 Accessibility</h4>
+          <p>Take your exams anytime. Our cloud-based CBT platform supports flexible scheduling and remote access.</p>
+        </div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M12 16v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.4" fill="currentColor" opacity="0.04"/></svg>
+        <div>
+          <h4>Instant Results</h4>
+          <p>Automatic grading for objective questions means learners receive immediate feedback and performance summaries.</p>
+        </div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="7" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.4" fill="currentColor" opacity="0.04"/><path d="M8 7v-2a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <div>
+          <h4>Secure Testing</h4>
+          <p>Proctoring-ready features, secure sessions, and tamper-resistant question delivery ensure exam integrity.</p>
+        </div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h9M4 18h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></svg>
+        <div>
+          <h4>Performance Analytics</h4>
+          <p>Robust dashboards for students and instructors. Track progress, item analysis, and trends over time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer (CTA band integrated here; paragraph removed) -->
+  <footer class="footer" role="contentinfo" aria-label="Footer">
+  <div class="footer-container">
+    
+    <!-- Left -->
+    <div class="footer-left">
+      © <span id="year"><?php echo $year; ?></span> Petroleum Training Institute. 
+      <span class="nowrap">All rights reserved.</span>
     </div>
-  </nav>
-</header>
 
-<script>
-  // Close offcanvas if resizing from mobile → desktop
-  window.addEventListener('resize', function() {
-    if (window.innerWidth >= 1000) {
-      let offcanvasEl = document.querySelector('#sideNav');
-      let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
-      if (offcanvas) offcanvas.hide();
-    }
-  });
-</script>
+    <!-- Center -->
+    <nav class="footer-links" aria-label="Footer links">
+      <a href="#privacy" aria-label="Privacy policy">Privacy Policy</a>
+      <a href="#terms" aria-label="Terms of service">Terms</a>
+      <a class="nav-link text-white" href="feedback.php">Feedback</a>
+      <!-- Open modal with button for accessibility and predictable behavior -->
+      <button id="openDevModal" class="link-button" aria-label="Developer info">Developers</button>
+    </nav>
 
+    <!-- Right -->
+    <div class="footer-cta" role="group" aria-label="Footer call to actions">
+      <a class="btn btn-primary" href="#signup" title="Create Account">
+        <i class="fas fa-pencil-alt" aria-hidden="true"></i> Create Account
+      </a>
+      <a class="btn btn-ghost" href="#student-login" title="Sign In">
+        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign In
+      </a>
+      
+    </div>
+    
+  </div>
+</footer>
 
-  <!-- Background area -->
-  <div class="bg1 min-vh-100 pt-5" style="min-height:100vh;">
-    <div class="container py-4 h-100">
-      <div id="global-alert-container" class="mb-3"></div>
+    <!-- Developers Modal (initially hidden) -->
+    <div id="devModalOverlay" class="dev-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="devModalTitle">
+      <div class="dev-modal" role="document">
+        <button class="close-x" id="devModalCloseX" aria-label="Close developers dialog">&times;</button>
+        <header>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#0b6cff,#00bfa6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">PT</div>
+            <div>
+              <h3 id="devModalTitle" class="title">Developers & Contributors</h3>
+              <div class="subtitle">Core team behind the PTI CBT Portal (prototype)</div>
+            </div>
+          </div>
+        </header>
 
-      <div class="card shadow-lg p-4 mx-auto auth-card bg-glass">
-        <!-- Tabs -->
-       <ul class="nav nav-tabs justify-content-center mb-3 dark-tabs" id="authTabs" role="tablist">
-  <li class="nav-item">
-    <button class="nav-link active btn-success" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">
-      <i class="bi bi-box-arrow-in-right me-1"></i>Login
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup-pane" type="button" role="tab">
-      <i class="bi bi-person-plus me-1"></i>Sign Up
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-pane" type="button" role="tab">
-      <i class="bi bi-shield-lock me-1"></i>Admin Login
-    </button>
-  </li>
-</ul>
-
-
-        <div class="tab-content" id="authTabsContent">
-          <!-- Login -->
-          <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
-            <form class="needs-validation" novalidate action="login.php?q=index.php" method="POST">
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <div class="form-floating flex-grow-1">
-                  <input type="email" class="form-control" id="loginEmail" name="email" placeholder="Email" required autocomplete="off">
-                  <label for="loginEmail">Email</label>
-                  <div class="invalid-feedback">Please enter a valid email.</div>
-                </div>
-              </div>
-
-              <div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <div class="form-floating flex-grow-1 position-relative">
-                  <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Password" required minlength="8" maxlength="16" autocomplete="new-password">
-                  <label for="loginPassword">Password</label>
-                  <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('loginPassword', this)"><i class="bi bi-eye"></i></button>
-                  <div class="invalid-feedback">Password must be 8–16 characters.</div>
-                </div>
-              </div>
-
-              <?php if (isset($_GET['error_login'])): ?>
-                <p class="text-danger small mb-2"><?= htmlspecialchars($_GET['error_login']) ?></p>
-              <?php endif; ?>
-
-              <div class="d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-in-right me-1"></i>Log In</button></div>
-            </form>
+        <div class="dev-grid">
+          <div class="dev-card">
+            <h5>Lead Developer</h5>
+            <p>John Doe — Backend & Exam Engine</p>
+            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">john.doe@example.com</p>
           </div>
 
-          <!-- Sign Up -->
-          <div class="tab-pane fade" id="signup-pane" role="tabpanel">
-            <form class="needs-validation mx-auto" novalidate action="sign.php?q=account.php" method="POST" style="max-width: 400px; min-width: 260px; padding: 16px 8px;">
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <div class="form-floating flex-grow-1">
-                  <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required minlength="2" autocomplete="off">
-                  <label for="name">Full Name</label>
-                  <div class="invalid-feedback">Please enter your name.</div>
-                </div>
-              </div>
-
-             <!-- Gender (checkboxes with floating label style) -->
-<div class="input-group mb-2">
-  <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
-  <div class="form-floating flex-grow-1 position-relative">
-    <div class="floating-gender-label" style="position:absolute;top:0.2rem;left:1.2rem;color:rgba(255,255,255,0.8);font-weight:600;pointer-events:none;z-index:2;">Gender</div>
-    <div class="pt-4">
-      <div class="form-check form-check-inline">
-        <input class="form-check-input gender-checkbox" type="checkbox" id="genderM" name="gender" value="M">
-        <label class="form-check-label" for="genderM">Male</label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input gender-checkbox" type="checkbox" id="genderF" name="gender" value="F">
-        <label class="form-check-label" for="genderF">Female</label>
-      </div>
-    </div>
-    <div class="invalid-feedback">Please select a gender.</div>
-  </div>
-</div>
-
-
-             
-
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <div class="form-floating flex-grow-1">
-                  <input type="email" class="form-control" id="email" name="email" placeholder="Email" required autocomplete="off">
-                  <label for="email">Email</label>
-                  <div class="invalid-feedback">Enter valid email.</div>
-                </div>
-              </div>
-
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-card-checklist"></i></span>
-                <div class="form-floating flex-grow-1">
-                  <input type="tel" class="form-control" id="mob" name="mob" placeholder="Mobile Number" required pattern="[\d+\-\s()]{7,}" autocomplete="off">
-                  <label for="mob">REG Number</label>
-                  <div class="invalid-feedback">Enter valid REG number.</div>
-                </div>
-              </div>
-
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <div class="form-floating flex-grow-1 position-relative">
-                  <input type="password" class="form-control" id="password" name="password" placeholder="Password" required minlength="8" maxlength="16" autocomplete="new-password">
-                  <label for="password">Password</label>
-                  <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('password', this)"><i class="bi bi-eye"></i></button>
-                  <div class="invalid-feedback">Password must be 8–16 characters.</div>
-                </div>
-              </div>
-
-              <!-- Strength meter (hidden until typing) -->
-              <div class="mb-2" id="strengthWrapper" style="display:none;">
-                <small id="strengthMessage" class="fw-semibold"></small>
-                <div class="progress" style="height:5px;">
-                  <div id="strengthBar" class="progress-bar" role="progressbar" style="width:0%"></div>
-                </div>
-              </div>
-
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
-                <div class="form-floating flex-grow-1 position-relative">
-                  <input type="password" class="form-control" id="cpassword" name="cpassword" placeholder="Confirm Password" required autocomplete="new-password">
-                  <label for="cpassword">Confirm Password</label>
-                  <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('cpassword', this)"><i class="bi bi-eye"></i></button>
-                  <div class="invalid-feedback">Please confirm password.</div>
-                </div>
-              </div>
-
-              <div class="mb-2"><small id="matchHelp" class="fw-semibold"></small></div>
-
-              <?php if (isset($_GET['error_signup'])): ?><p class="text-danger small mb-2"><?= htmlspecialchars($_GET['error_signup']) ?></p><?php endif; ?>
-              <?php if (isset($_GET['q7'])): ?><p class="text-danger small mb-2"><?= htmlspecialchars($_GET['q7']) ?></p><?php endif; ?>
-
-              <div class="d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Sign Up</button></div>
-            </form>
+          <div class="dev-card">
+            <h5>Frontend & Accessibility</h5>
+            <p>Jane Smith — UI/UX, Responsive Layouts</p>
+            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">jane.smith@example.com</p>
           </div>
 
-          <!-- Admin Login -->
-          <div class="tab-pane fade" id="admin-pane" role="tabpanel">
-            <form class="needs-validation" novalidate action="admin.php?q=index.php" method="POST">
-              <div class="input-group mb-2">
-                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                <div class="form-floating flex-grow-1">
-                  <input type="text" class="form-control" id="adminUser" name="uname" placeholder="Admin user id" required maxlength="20" autocomplete="off">
-                  <label for="adminUser">Admin user id</label>
-                  <div class="invalid-feedback">Enter admin ID.</div>
-                </div>
-              </div>
+          <div class="dev-card">
+            <h5>DevOps</h5>
+            <p>Samuel Okonkwo — Deployment & Security</p>
+            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">samuel.ok@example.com</p>
+          </div>
 
-              <div class="input-group mb-3">
-                <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                <div class="form-floating flex-grow-1 position-relative">
-                  <input type="password" class="form-control" id="adminPassword" name="password" placeholder="Password" required minlength="5" maxlength="15" autocomplete="new-password">
-                  <label for="adminPassword">Password</label>
-                  <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('adminPassword', this)"><i class="bi bi-eye"></i></button>
-                  <div class="invalid-feedback">Password must be 5–15 characters.</div>
-                </div>
-              </div>
-
-              <?php if (isset($_GET['error_admin'])): ?><p class="text-danger small mb-2"><?= htmlspecialchars($_GET['error_admin']) ?></p><?php endif; ?>
-
-              <div class="d-grid"><button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-in-right me-1"></i>Admin Login</button></div>
-            </form>
+          <div class="dev-card">
+            <h5>QA & Testing</h5>
+            <p>Aisha Bello — Test Automation & Reporting</p>
+            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">aisha.bello@example.com</p>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-
-
-  <!-- Developers Modal -->
-  <div class="modal fade" id="developers" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content bg-dark text-white">
-        <div class="modal-header">
-          <h5 class="modal-title">Developers</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="actions">
+          <a class="btn btn-ghost" href="#developers-bios" title="Open bios">View Full Bios</a>
+          <button id="devModalCancel" class="btn btn-secondary" aria-label="Cancel and close">Cancel</button>
         </div>
-        <div class="modal-body bg-dark text-white"> <ul class="mb-0">
-          <li>Jonathan Ikpen — Lead Developer</li>
-          <li>Team PTI — Contributors</li>
-        </ul></div>
       </div>
     </div>
+
   </div>
 
-    <!-- Success Toast (server-side only) -->
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
-    <div id="successToast" class="toast align-items-center text-bg-success border-0">
-      <div class="d-flex">
-        <div class="toast-body">
-          <?php echo isset($_GET['success']) ? htmlspecialchars($_GET['success']) : ''; ?>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- Error Toast -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1200">
-  <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert">
-    <div class="d-flex">
-      <div class="toast-body">
-        <?php echo isset($_GET['w']) ? htmlspecialchars($_GET['w']) : ''; ?>
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  </div>
-</div>
-
+  <!-- Minimal JS for mobile nav toggle + graceful fallback + modal behavior -->
   <script>
-    // Auto-show error toast if message exists
-(function(){
-  const errorToastEl = document.getElementById("errorToast");
-  if(errorToastEl && errorToastEl.querySelector(".toast-body").textContent.trim()!==""){
-    new bootstrap.Toast(errorToastEl,{delay:4000}).show();
-  }
-})();
+     (function(){
+      const toggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
 
-    // Bootstrap validation
-    (() => {
-      'use strict';
-      const forms = document.querySelectorAll('.needs-validation');
-      Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          form.classList.add('was-validated');
-        }, false);
+      toggle.addEventListener('click', function(){
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        navLinks.classList.toggle('show');
       });
-    })();
 
-    // Toggle password
-    function togglePassword(id, btn) {
-      const input = document.getElementById(id);
-      const icon = btn.querySelector('i');
-      if (input.type === "password") {
-        input.type = "text";
-        icon.classList.replace("bi-eye", "bi-eye-slash");
-      } else {
-        input.type = "password";
-        icon.classList.replace("bi-eye-slash", "bi-eye");
-      }
-    }
-
-    // Confirm password check
-    (function(){
-      const pw = document.getElementById("password");
-      const cpw = document.getElementById("cpassword");
-      const help = document.getElementById("matchHelp");
-      if(!pw || !cpw) return;
-
-      const check = () => {
-        if(!cpw.value){
-          help.textContent = '';
-          cpw.setCustomValidity('');
-          return;
-        }
-        if(pw.value !== cpw.value){
-          help.textContent = "Passwords do not match";
-          help.className = "text-danger fw-semibold";
-          cpw.setCustomValidity("Mismatch");
-        } else {
-          help.textContent = "Passwords match";
-          help.className = "text-success fw-semibold";
-          cpw.setCustomValidity("");
-        }
-      };
-
-      pw.addEventListener("input", check);
-      cpw.addEventListener("input", check);
-    })();
-
-    // Password strength meter
-    (function(){
-      const pw = document.getElementById("password");
-      const bar = document.getElementById("strengthBar");
-      const msg = document.getElementById("strengthMessage");
-      const wrap = document.getElementById("strengthWrapper");
-      if(!pw) return;
-
-      pw.addEventListener("input", () => {
-        if(!pw.value){
-          wrap.style.display = "none";
-          bar.style.width = "0%";
-          msg.textContent = "";
-          return;
-        }
-        wrap.style.display = "block";
-        let s=0;
-        if(pw.value.length>=8) s++;
-        if(/[A-Z]/.test(pw.value)) s++;
-        if(/[0-9]/.test(pw.value)) s++;
-        if(/[^A-Za-z0-9]/.test(pw.value)) s++;
-        switch(s){
-          case 1: bar.style.width="25%"; bar.className="progress-bar weak"; msg.textContent="Weak"; msg.className="text-danger fw-semibold"; break;
-          case 2: bar.style.width="50%"; bar.className="progress-bar medium"; msg.textContent="Medium"; msg.className="text-warning fw-semibold"; break;
-          case 3: bar.style.width="75%"; bar.className="progress-bar medium"; msg.textContent="Strong"; msg.className="text-primary fw-semibold"; break;
-          case 4: bar.style.width="100%"; bar.className="progress-bar strong"; msg.textContent="Very Strong"; msg.className="text-success fw-semibold"; break;
-        }
-      });
-    })();
-
-    // Auto-show server-side success toast if message exists
-    (function(){
-      const successToastEl = document.getElementById("successToast");
-      if(successToastEl && successToastEl.querySelector(".toast-body").textContent.trim()!==""){
-        new bootstrap.Toast(successToastEl,{delay:4000}).show();
-      }
-    })();
-
-    // Persist active tab across reloads
-    (function(){
-      const authTabs = document.getElementById('authTabs');
-      if(!authTabs) return;
-      const savedTab = localStorage.getItem('activeAuthTab');
-      if(savedTab){
-        const triggerEl = document.querySelector(`#authTabs button[data-bs-target="${savedTab}"]`);
-        if(triggerEl){
-          const tab = new bootstrap.Tab(triggerEl);
-          tab.show();
-        }
-      }
-      authTabs.addEventListener('shown.bs.tab', (event) => {
-        localStorage.setItem('activeAuthTab', event.target.getAttribute('data-bs-target'));
-      });
-    })();
-
-    // Ensure only one gender checkbox can be checked and validate
-document.addEventListener('DOMContentLoaded', function() {
-  var genderCheckboxes = document.querySelectorAll('.gender-checkbox');
-  
-  genderCheckboxes.forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-      if (this.checked) {
-        genderCheckboxes.forEach(function(cb) {
-          if (cb !== checkbox) cb.checked = false;
-        });
-      }
-    });
-  });
-
-  // Form validation for at least one gender
-  const signupForm = document.querySelector('#signup-pane form');
-  if(signupForm){
-    signupForm.addEventListener('submit', function(e){
-      const anyChecked = Array.from(genderCheckboxes).some(cb => cb.checked);
-      if(!anyChecked){
-        e.preventDefault();
-        e.stopPropagation();
-        genderCheckboxes[0].closest('.form-floating').classList.add('was-validated');
-      }
-    });
-  }
-});
-
-
-    // Footer Admin Login link activates admin-pane tab
-    document.addEventListener('DOMContentLoaded', function() {
-      var adminLink = document.getElementById('footer-admin-link');
-      if (adminLink) {
-        adminLink.addEventListener('click', function(e) {
-          e.preventDefault();
-          var adminTab = document.getElementById('admin-tab');
-          if (adminTab) {
-            var tab = new bootstrap.Tab(adminTab);
-            tab.show();
-            // Scroll to the tab content for better UX
-            var tabContent = document.getElementById('authTabsContent');
-            if(tabContent) tabContent.scrollIntoView({behavior:'smooth'});
+      // Small enhancement: smooth scroll to anchors on the page (for the demo placeholders)
+      document.querySelectorAll('a[href^="#"]').forEach(a=>{
+        a.addEventListener('click', function(e){
+          const target = this.getAttribute('href');
+          if(target === '#' || target === '') return;
+          // Let browser handle external or real anchors; for placeholders just prevent default jump
+          if(document.querySelector(target)){
+            e.preventDefault();
+            document.querySelector(target).scrollIntoView({behavior:'smooth', block:'start'});
+            // close mobile menu if open
+            if(navLinks.classList.contains('show')) {
+              navLinks.classList.remove('show');
+              toggle.setAttribute('aria-expanded','false');
+            }
           }
         });
-      }
-    });
-    // Auto-activate tab based on query parameter
-// Handle query params for tabs and modals
-document.addEventListener('DOMContentLoaded', function(){
-  const urlParams = new URLSearchParams(window.location.search);
-
-  // 1️⃣ Admin tab
-  const tabParam = urlParams.get('tab');
-  if(tabParam === 'admin'){
-    const adminTab = document.getElementById('admin-tab');
-    if(adminTab){
-      const tab = new bootstrap.Tab(adminTab);
-      tab.show();
-      const tabContent = document.getElementById('authTabsContent');
-      if(tabContent) tabContent.scrollIntoView({behavior:'smooth'});
-    }
-  }
-
-  // 2️⃣ Developers modal
-  const modalParam = urlParams.get('modal');
-  if(modalParam === 'developers'){
-    const devModalEl = document.getElementById('developers');
-    if(devModalEl){
-      const devModal = new bootstrap.Modal(devModalEl);
-      devModal.show();
-    }
-  }
-    // Sidebar nav-link active effect
-    var sidebarLinks = document.querySelectorAll('#sideNav .nav-link');
-    sidebarLinks.forEach(function(link) {
-      link.addEventListener('click', function() {
-        sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
-        this.classList.add('active');
       });
-    });
-});
 
+      // Set current year in footer (progressive enhancement)
+      const y = new Date().getFullYear();
+      const el = document.getElementById('year');
+      if(el) el.textContent = y;
 
+      // -------- Developers modal logic --------
+      const openBtn = document.getElementById('openDevModal');
+      const overlay = document.getElementById('devModalOverlay');
+      const cancelBtn = document.getElementById('devModalCancel');
+      const closeX = document.getElementById('devModalCloseX');
+      let lastFocused = null;
+
+      function openModal() {
+        lastFocused = document.activeElement;
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+        // focus the close button for keyboard users
+        closeX.focus();
+        // prevent page scroll while modal is open
+        document.documentElement.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.documentElement.style.overflow = '';
+        // return focus to the opener to maintain context
+        if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+      }
+
+      openBtn.addEventListener('click', function(){ openModal(); });
+      cancelBtn.addEventListener('click', function(){ closeModal(); });
+      closeX.addEventListener('click', function(){ closeModal(); });
+
+      // Close when clicking outside the modal content
+      overlay.addEventListener('click', function(e){
+        if(e.target === overlay) { // only when clicking the backdrop, not inside dialog
+          closeModal();
+        }
+      });
+
+      // Close with ESC key
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape' && overlay.classList.contains('show')) {
+          closeModal();
+        }
+      });
+
+      // Prevent clicks inside the modal from bubbling to overlay (safety)
+      document.querySelectorAll('.dev-modal').forEach(m=>{
+        m.addEventListener('click', function(e){ e.stopPropagation(); });
+      });
+
+    })();
   </script>
-
 </body>
 </html>

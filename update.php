@@ -524,151 +524,7 @@ if (
 
 
 
-   // Ensure history exists — insert a stub row if missing but DO NOT set score here
-$stmt = $con->prepare("SELECT * FROM history WHERE eid=? AND email=? LIMIT 1");
-$stmt->bind_param("ss", $eid, $email);
-$stmt->execute();
-$res = $stmt->get_result();
-if ($res->num_rows === 0) {
-    // Insert stub row without score/level so score stays NULL until completion
-    $stmtIns = $con->prepare("INSERT INTO history (email, eid, date) VALUES (?, ?, NOW())");
-    $stmtIns->bind_param("ss", $email, $eid);
-    $stmtIns->execute();
-    $stmtIns->close();
-
-    // reselect
-    $stmt->execute();
-    $res = $stmt->get_result();
-}
-$stmt->close();
-
-
-    $rowH = $res->fetch_assoc();
-    // NOTE: history columns assumed: email,eid,score,level,sahi,wrong,date
-    $correct_count = (int)($rowH['sahi'] ?? 0);
-    $wrong_count   = (int)($rowH['wrong'] ?? 0);
-
-    // Update counts based on this response
-    if ($selected_ans !== '') {
-        // The student's posted 'ans' should be the option's optionid (string).
-        if ($selected_ans === $correct_ansid) {
-            $correct_count++;
-        } else {
-            $wrong_count++;
-        }
-    } // unanswered -> remain uncounted
-
-    $attempted = $correct_count + $wrong_count;
-
-    // compute score
-    $computed_score = ($correct_count * $marks_per_correct) - ($wrong_count * $penalty_per_wrong);
-    if ($computed_score < 0) $computed_score = 0;
-
-    // Persist progress only — do NOT set score until final submission / timeout
-$stmt = $con->prepare("UPDATE history SET level=?, sahi=?, wrong=?, date=NOW() WHERE email=? AND eid=?");
-$stmt->bind_param("iiiss", $attempted, $correct_count, $wrong_count, $email, $eid);
-$stmt->execute();
-$stmt->close();
-
-
-    // If not last question, go to next
-    if ($sn < $total) {
-        $next = $sn + 1;
-        header("Location: account.php?q=quiz&step=2&eid=" . rawurlencode($eid) . "&n=" . $next . "&t=" . $total . "&time=" . intval($quizTime));
-        exit;
-    }
-
-    // Last question: finalize rank (avoid double counting if already finalized)
-    $stmt = $con->prepare("SELECT level, sahi, wrong FROM history WHERE eid=? AND email=? LIMIT 1");
-    $stmt->bind_param("ss", $eid, $email);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $h_level = $h_sahi = $h_wrong = 0;
-    if ($res && $res->num_rows) {
-        $r = $res->fetch_assoc();
-        $h_level = (int)$r['level'];
-        $h_sahi = (int)$r['sahi'];
-        $h_wrong = (int)$r['wrong'];
-    }
-    $stmt->close();
-
-   // compute final score (you already have this)
-$finalScore = ($h_sahi * $marks_per_correct) - ($h_wrong * $penalty_per_wrong);
-if ($finalScore < 0) $finalScore = 0;
-
-$alreadyFinished = !empty($rowH['completed']); // new flag check
-
-if (!$alreadyFinished) {
-    // Start transaction so history + rank updates are atomic
-    if (!$con->begin_transaction()) {
-        error_log("[quiz-finalize] failed to start transaction: " . $con->error);
-        // fallback: try best-effort, but better to show error
-    }
-
-    try {
-         // 1) Persist final score into history and mark completed
-        $stmtFinal = $con->prepare(
-            "UPDATE history SET score=?, level=?, sahi=?, wrong=?, completed=1, date=NOW() WHERE email=? AND eid=?"
-        );
-        if ($stmtFinal === false) throw new Exception("prepare failed: " . $con->error);
-        $stmtFinal->bind_param("iiiiss", $finalScore, $attempted, $h_sahi, $h_wrong, $email, $eid);
-        $stmtFinal->execute();
-        $stmtFinal->close();
-
-        // 2) Update rank
-        $stmt = $con->prepare("SELECT score FROM rank WHERE email=? LIMIT 1");
-        if ($stmt === false) throw new Exception("prepare failed: " . $con->error);
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $res = $stmt->get_result();
-
-        if ($res->num_rows === 0) {
-            $stmtIns = $con->prepare("INSERT INTO rank (email, score, time) VALUES (?, ?, NOW())");
-            if ($stmtIns === false) throw new Exception("prepare failed: " . $con->error);
-            $stmtIns->bind_param("si", $email, $finalScore);
-            if (!$stmtIns->execute()) throw new Exception("rank insert failed: " . $stmtIns->error);
-            $stmtIns->close();
-        } else {
-            $existing = (int)$res->fetch_assoc()['score'];
-            $newScore = max(0, $existing + (int)$finalScore);
-            $stmtUpd = $con->prepare("UPDATE rank SET score=?, time=NOW() WHERE email=?");
-            if ($stmtUpd === false) throw new Exception("prepare failed: " . $con->error);
-            $stmtUpd->bind_param("is", $newScore, $email);
-            if (!$stmtUpd->execute()) throw new Exception("rank update failed: " . $stmtUpd->error);
-            $stmtUpd->close();
-        }
-        $stmt->close();
-
-        // 3) commit
-        if (!$con->commit()) throw new Exception("commit failed: " . $con->error);
-
-    } catch (Exception $ex) {
-        // rollback and log
-        $con->rollback();
-        error_log("[quiz-finalize] exception: " . $ex->getMessage());
-        // Optionally set a flash message / show user friendly error
-        $_SESSION['flash_error'] = "Server error while finalizing exam. Please contact admin.";
-        header("Location: account.php?q=result&eid=" . rawurlencode($eid));
-        exit;
-    }
-}
-
-
-// server-side cleanup and redirect (same as yours)
-if (!empty($_SESSION['exam_start']) && isset($_SESSION['exam_start'][$eid])) {
-    unset($_SESSION['exam_start'][$eid]);
-}
-if ($isAjax) {
-   header('Content-Type: application/json');
-   echo json_encode(['completed' => true]);
-   exit;
-} else {
-   // old HTML redirect
-   echo '<!doctype html><html><head>...<script>window.location.href=...</script></head></html>';
-   exit;
-}
-
-exit;
+  
 
 
 // -------------------- STUDENT: TIMEOUT FINALIZATION --------------------
@@ -725,7 +581,10 @@ if (!empty($_GET['q']) && $_GET['q'] === 'timeout' && !empty($_GET['eid'])) {
     if ($computed_score < 0) $computed_score = 0;
 
     // persist history
-    $stmt = $con->prepare("UPDATE history SET score=?, level=?, sahi=?, wrong=?, date=NOW() WHERE email=? AND eid=?");
+    $stmt = $con->prepare("UPDATE history 
+SET score=?, level=?, sahi=?, wrong=?, completed=1, date=NOW() 
+WHERE email=? AND eid=? AND (completed IS NULL OR completed=0)
+");
     $stmt->bind_param("iiiiss", $computed_score, $attempted, $correct_count, $wrong_count, $email, $eid);
     $stmt->execute();
     $stmt->close();
