@@ -18,7 +18,7 @@
     html,body{height:100%}
     body{
       margin:0;
-      background: linear-gradient(180deg, #f6fbff 0%, #f0f7fb 40%, #eef6fa 100%);
+      background: linear-gradient(135deg, #00416A, #198754);
       color:var(--accent-3);
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
@@ -43,10 +43,7 @@
       justify-content:space-between;
       gap:20px;
       padding:18px;
-      background: linear-gradient(90deg, #0d3b66 0%, #137e4c 100%);
-      border-radius:12px;
-      box-shadow:var(--shadow-1);
-      backdrop-filter: blur(6px);
+      background: none;
     }
 
     .brand {
@@ -321,27 +318,27 @@
 
     /* Footer */
       footer{
-      margin-top:auto;
+      margin-top:20px;
       padding:18px;
       display:flex;
       gap:12px;
       align-items:center;
       justify-content:space-between;
-      border-radius:12px;
-      background:linear-gradient(90deg, rgba(255,255,255,0.55), rgba(255,255,255,0.45));
-      box-shadow:var(--shadow-1);
+      
+      background: none;
+      
       color:var(--muted);
       flex-wrap:wrap;
-      row-gap:12px;
+      row-gap:10px;
     }
 
     /* left area: copyright */
    .footer {
-  background: var(--footer-bg, #f9f9f9);
+  background: none;
   border-top: 1px solid rgba(0,0,0,0.05);
-  padding: 20px 24px;
+  padding: 10px 14px;
   font-size: 14px;
-  color: var(--muted);
+  color: var(--card);
 }
 
 .footer-container {
@@ -365,15 +362,13 @@
 }
 
 .footer-links a {
-  color: var(--muted);
+  color: var(--var(--card));
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.footer-links a:hover {
-  color: var(--primary, #065f46);
-}
+
 
 .footer-cta {
   flex: 0 0 auto;             /* prevent stretching */

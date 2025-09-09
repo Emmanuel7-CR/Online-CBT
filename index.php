@@ -5,6 +5,7 @@
 $pageTitle = "PTI Computer-Based Testing Portal — Petroleum Training Institute";
 $logoPath  = 'image/PTI.jpg';
 $year      = date('Y');
+include 'header.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -143,30 +144,7 @@ $year      = date('Y');
 
     <!-- Header -->
     <header class="header" role="banner" aria-label="PTI CBT header">
-      <a href="#" class="brand" aria-label="PTI home link">
-        <!-- logo mark (SVG-like glyph inside box) -->
-        
-          <img src="<?php echo htmlspecialchars($logoPath); ?>" alt="PTI logo" class="logo">
-       
-        <div class="brand-text">
-          <h1>Petroleum Training Institute</h1>
-          <p>CBT Portal — Assessment &amp; Certification</p>
-        </div>
-      </a>
-
-      <!-- Mobile menu toggle -->
-      <button class="mobile-toggle" id="mobileToggle" aria-expanded="false" aria-controls="primaryNav" title="Toggle navigation">
-        <i class="fa-solid fa-bars" aria-hidden="true"></i>
-        <span class="sr-only">Toggle navigation</span>
-      </button>
-
-      <nav id="primaryNav" aria-label="Primary">
-        <div class="nav-links" id="navLinks">
-          <a href="admin-login.php" class="btn-admin" title="Admin Portal (placeholder)">Admin Portal</a>
-          <a href="user-login.php" class="login-link">Student Login</a>
-          <a href="user-signup.php" class="signup-link">Student Signup</a>
-        </div>
-      </nav>
+    
     </header>
 
     <!-- HERO -->
@@ -196,7 +174,7 @@ $year      = date('Y');
         <div style="margin-top:22px;display:flex;gap:12px;flex-wrap:wrap">
           <small class="muted"><strong>Exam Window:</strong> 24/7 availability</small>
           <small class="muted">•</small>
-          <small class="muted"><strong>Support:</strong> support@pti.edu.ng (placeholder)</small>
+          <small class="muted"><strong>Support:</strong> support@pti.edu.ng</small>
         </div>
       </div>
 
@@ -247,87 +225,8 @@ $year      = date('Y');
       </div>
     </section>
 
-    <!-- Footer (CTA band integrated here; paragraph removed) -->
-  <footer class="footer" role="contentinfo" aria-label="Footer">
-  <div class="footer-container">
-    
-    <!-- Left -->
-    <div class="footer-left">
-      © <span id="year"><?php echo $year; ?></span> Petroleum Training Institute. 
-      <span class="nowrap">All rights reserved.</span>
-    </div>
+    <?php include 'footer.php'; ?>
 
-    <!-- Center -->
-    <nav class="footer-links" aria-label="Footer links">
-      <a href="#privacy" aria-label="Privacy policy">Privacy Policy</a>
-      <a href="#terms" aria-label="Terms of service">Terms</a>
-      <a class="nav-link text-white" href="feedback.php">Feedback</a>
-      <!-- Open modal with button for accessibility and predictable behavior -->
-      <button id="openDevModal" class="link-button" aria-label="Developer info">Developers</button>
-    </nav>
-
-    <!-- Right -->
-    <div class="footer-cta" role="group" aria-label="Footer call to actions">
-      <a class="btn btn-primary" href="#signup" title="Create Account">
-        <i class="fas fa-pencil-alt" aria-hidden="true"></i> Create Account
-      </a>
-      <a class="btn btn-ghost" href="#student-login" title="Sign In">
-        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign In
-      </a>
-      
-    </div>
-    
-  </div>
-</footer>
-
-    <!-- Developers Modal (initially hidden) -->
-    <div id="devModalOverlay" class="dev-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="devModalTitle">
-      <div class="dev-modal" role="document">
-        <button class="close-x" id="devModalCloseX" aria-label="Close developers dialog">&times;</button>
-        <header>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:44px;height:44px;background:linear-gradient(135deg,#0b6cff,#00bfa6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700">PT</div>
-            <div>
-              <h3 id="devModalTitle" class="title">Developers & Contributors</h3>
-              <div class="subtitle">Core team behind the PTI CBT Portal (prototype)</div>
-            </div>
-          </div>
-        </header>
-
-        <div class="dev-grid">
-          <div class="dev-card">
-            <h5>Lead Developer</h5>
-            <p>John Doe — Backend & Exam Engine</p>
-            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">john.doe@example.com</p>
-          </div>
-
-          <div class="dev-card">
-            <h5>Frontend & Accessibility</h5>
-            <p>Jane Smith — UI/UX, Responsive Layouts</p>
-            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">jane.smith@example.com</p>
-          </div>
-
-          <div class="dev-card">
-            <h5>DevOps</h5>
-            <p>Samuel Okonkwo — Deployment & Security</p>
-            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">samuel.ok@example.com</p>
-          </div>
-
-          <div class="dev-card">
-            <h5>QA & Testing</h5>
-            <p>Aisha Bello — Test Automation & Reporting</p>
-            <p style="margin-top:8px;font-size:12px;color:#4a6b8a">aisha.bello@example.com</p>
-          </div>
-        </div>
-
-        <div class="actions">
-          <a class="btn btn-ghost" href="#developers-bios" title="Open bios">View Full Bios</a>
-          <button id="devModalCancel" class="btn btn-secondary" aria-label="Cancel and close">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
 
   <!-- Minimal JS for mobile nav toggle + graceful fallback + modal behavior -->
   <script>
@@ -364,53 +263,7 @@ $year      = date('Y');
       const el = document.getElementById('year');
       if(el) el.textContent = y;
 
-      // -------- Developers modal logic --------
-      const openBtn = document.getElementById('openDevModal');
-      const overlay = document.getElementById('devModalOverlay');
-      const cancelBtn = document.getElementById('devModalCancel');
-      const closeX = document.getElementById('devModalCloseX');
-      let lastFocused = null;
-
-      function openModal() {
-        lastFocused = document.activeElement;
-        overlay.classList.add('show');
-        overlay.setAttribute('aria-hidden', 'false');
-        // focus the close button for keyboard users
-        closeX.focus();
-        // prevent page scroll while modal is open
-        document.documentElement.style.overflow = 'hidden';
-      }
-
-      function closeModal() {
-        overlay.classList.remove('show');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.documentElement.style.overflow = '';
-        // return focus to the opener to maintain context
-        if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
-      }
-
-      openBtn.addEventListener('click', function(){ openModal(); });
-      cancelBtn.addEventListener('click', function(){ closeModal(); });
-      closeX.addEventListener('click', function(){ closeModal(); });
-
-      // Close when clicking outside the modal content
-      overlay.addEventListener('click', function(e){
-        if(e.target === overlay) { // only when clicking the backdrop, not inside dialog
-          closeModal();
-        }
-      });
-
-      // Close with ESC key
-      document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape' && overlay.classList.contains('show')) {
-          closeModal();
-        }
-      });
-
-      // Prevent clicks inside the modal from bubbling to overlay (safety)
-      document.querySelectorAll('.dev-modal').forEach(m=>{
-        m.addEventListener('click', function(e){ e.stopPropagation(); });
-      });
+     
 
     })();
   </script>

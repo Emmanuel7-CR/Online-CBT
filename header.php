@@ -110,8 +110,8 @@ if (!isset($currentPage)) $currentPage = '';
         </div>
         <div class="offcanvas-body">
           <ul class="navbar-nav flex-column gap-2">
-            <li class="nav-item"><a class="nav-link text-white <?= $currentPage === 'login' ? 'active' : '' ?>" href="login.php">Login</a></li>
-            <li class="nav-item"><a class="nav-link text-white <?= $currentPage === 'signup' ? 'active' : '' ?>" href="signup.php">Sign Up</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= $currentPage === 'login' ? 'active' : '' ?>" href="user-login.php">Login</a></li>
+            <li class="nav-item"><a class="nav-link text-white <?= $currentPage === 'signup' ? 'active' : '' ?>" href="user-signup.php">SignUp</a></li>
             <li class="nav-item"><a class="nav-link text-white <?= $currentPage === 'admin' ? 'active' : '' ?>" href="admin-login.php">Admin Login</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="#about">About</a></li>
             <li class="nav-item"><a class="nav-link text-white" href="feedback.php">Feedback</a></li>
