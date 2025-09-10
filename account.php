@@ -1,4 +1,4 @@
-I want to add a modal to my project. When the user clicks on Submit the Exam, a modal should appear confirming if the user wants to submit the exam. And when the user clicks Yes, Submit Exam, the exam should be submitted normally as it would. But the Exam Confirm Submit modal should not interfere with the timer. When the timer elapses, it should behave as it normally does, which is to automatically submit the exam and then display the results. This is my code; 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
