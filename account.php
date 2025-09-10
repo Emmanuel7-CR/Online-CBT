@@ -778,7 +778,7 @@ while($row=mysqli_fetch_array($q) )
 {
 $e=$row['email'];
 $s=$row['score'];
-$q12=mysqli_query($con,"SELECT * FROM user WHERE email='$email' " )or die('Error231');
+$q12=mysqli_query($con,"SELECT * FROM user WHERE email='$e' " )or die('Error231');
 while($row=mysqli_fetch_array($q12) )
 {
 $name=$row['name'];

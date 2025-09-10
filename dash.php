@@ -249,127 +249,99 @@ echo '</table></div></div>';}
 <!-- ADD STUDENT FORM (q=7) -->
 <?php if(@$_GET['q']==7) { $year = date('Y'); ?>
 <div class="container d-flex justify-content-center align-items-center min-vh-100" style="padding-top:20px; padding-bottom:20px;">
-  <div class="card exam-card-header shadow-lg border-0 p-4 auth-card" style="max-width: 520px; width:100%;">
-
-    <!-- Logo -->
-    <div class="text-center mb-3 ">
-      <img src="image/PTI.jpg" alt="PTI Logo" class=" rounded-circle img-fluid mb-2" style="width:80px; height:auto;">
-      <h4 class="fw-bold mb-0">Petroleum Training Institute</h4>
+  <div class="card shadow-sm border-0 w-100" style="max-width: 720px;">
+    <!-- Card Header -->
+    <div class="card-header exam-card-header  text-white p-2" >
+      <h5 class="mb-0 fw-semibold"><i class="bi bi-person-plus me-1"></i>Register New Student</h5>
     </div>
 
-    <!-- Title -->
-    <div class="text-center mb-4">
-      <h5 class="fw-semibold">Register New Student</h5>
-    </div>
+    <!-- Card Body -->
+    <div class="card-body">
+      <form class="needs-validation" novalidate action="update.php?q=addstudent" method="POST">
 
-    <!-- Add Student Form -->
-    <form class="needs-validation mx-auto" novalidate action="update.php?q=addstudent" method="POST">
-
-      <!-- Full Name -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
-        <div class="form-floating flex-grow-1">
-          <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required minlength="2" autocomplete="off">
-          <label for="name" class="text-dark">Full Name</label>
-          <!--<div class="invalid-feedback">Please enter full name.</div> -->
+        <!-- Full Name -->
+        <div class="mb-3">
+          <label for="name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" required minlength="2" autocomplete="off">
         </div>
-      </div>
 
-      <!-- Gender -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-gender-ambiguous"></i></span>
-        <div class="form-control d-flex align-items-center justify-content-between">
-          <div class="form-check">
-            <input class="form-check-input gender-checkbox" type="checkbox" id="genderM" name="gender" value="M">
-            <label class="form-check-label" for="genderM">Male</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input gender-checkbox" type="checkbox" id="genderF" name="gender" value="F">
-            <label class="form-check-label" for="genderF">Female</label>
+        <!-- Gender -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input gender-checkbox" type="checkbox" id="genderM" name="gender" value="M">
+              <label class="form-check-label" for="genderM">Male</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input gender-checkbox" type="checkbox" id="genderF" name="gender" value="F">
+              <label class="form-check-label" for="genderF">Female</label>
+            </div>
           </div>
         </div>
-      </div>
-      <!--<div class="invalid-feedback">Please select a gender.</div> -->
 
-      <!-- Email -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
-        <div class="form-floating flex-grow-1">
-          <input type="email" class="form-control" id="email" name="email" placeholder="Email" required autocomplete="off">
-          <label for="email" class="text-dark">Email</label>
-         <!-- <div class="invalid-feedback">Enter valid email.</div> -->
+        <!-- Email -->
+        <div class="mb-3">
+          <label for="email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" id="email" name="email" required autocomplete="off">
         </div>
-      </div>
 
-      <!-- REG Number -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-card-checklist"></i></span>
-        <div class="form-floating flex-grow-1">
-          <input type="tel" class="form-control" id="mob" name="mob" placeholder="REG Number" required pattern="[\d+\-\s()]{7,}" autocomplete="off">
-          <label for="mob" class="text-dark">REG Number</label>
-         <!-- <div class="invalid-feedback">Enter valid REG number.</div> -->
+        <!-- REG Number -->
+        <div class="mb-3">
+          <label for="mob" class="form-label fw-semibold">REG Number <span class="text-danger">*</span></label>
+          <input type="tel" class="form-control" id="mob" name="mob" required pattern="[\d+\-\s()]{7,}" autocomplete="off">
         </div>
-      </div>
 
-      <!-- Password -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
-        <div class="form-floating flex-grow-1 position-relative">
-          <input type="password" class="form-control" id="password" name="password" placeholder="Password" required minlength="8" maxlength="16" autocomplete="new-password">
-          <label for="password" class="text-dark">Password</label>
+        <!-- Password -->
+        <div class="mb-3 position-relative">
+          <label for="password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+          <input type="password" class="form-control" id="password" name="password" required minlength="8" maxlength="16" autocomplete="new-password">
           <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('password', this)">
             <i class="bi bi-eye"></i>
           </button>
-         <!-- <div class="invalid-feedback">Password must be 8–16 characters.</div> -->
         </div>
-      </div>
 
-      <!-- Strength meter -->
-      <div class="mb-3" id="strengthWrapper" style="display:none;">
-        <small id="strengthMessage" class="fw-semibold"></small>
-        <div class="progress" style="height:5px;">
-          <div id="strengthBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+        <!-- Password Strength -->
+        <div class="mb-3" id="strengthWrapper" style="display:none;">
+          <small id="strengthMessage" class="fw-semibold"></small>
+          <div class="progress" style="height:5px;">
+            <div id="strengthBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+          </div>
         </div>
-      </div>
 
-      <!-- Confirm Password -->
-      <div class="input-group mb-3">
-        <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
-        <div class="form-floating flex-grow-1 position-relative">
-          <input type="password" class="form-control" id="cpassword" name="cpassword" placeholder="Confirm Password" required autocomplete="new-password">
-          <label for="cpassword" class="text-dark">Confirm Password</label>
+        <!-- Confirm Password -->
+        <div class="mb-3 position-relative">
+          <label for="cpassword" class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+          <input type="password" class="form-control" id="cpassword" name="cpassword" required autocomplete="new-password">
           <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0" onclick="togglePassword('cpassword', this)">
             <i class="bi bi-eye"></i>
           </button>
-         <!-- <div class="invalid-feedback">Please confirm password.</div> -->
         </div>
-      </div>
+        <div class="mb-2"><small id="matchHelp" class="fw-semibold"></small></div>
 
-      <div class="mb-2"><small id="matchHelp" class="fw-semibold"></small></div>
+        <!-- Flash Messages -->
+        <?php if (isset($_SESSION['flash_error'])): ?>
+          
+        <?php endif; ?>
+        <?php if (isset($_SESSION['flash_success'])): ?>
+         
+        <?php endif; ?>
 
-      <!-- Toast error messages (from update.php) -->
-      <?php if (isset($_SESSION['flash_error'])): ?>
-        <p class="text-danger small mb-2"><?= htmlspecialchars($_SESSION['flash_error']); unset($_SESSION['flash_error']); ?></p>
-      <?php endif; ?>
-      <?php if (isset($_SESSION['flash_success'])): ?>
-        <p class="text-success small mb-2"><?= htmlspecialchars($_SESSION['flash_success']); unset($_SESSION['flash_success']); ?></p>
-      <?php endif; ?>
-
-      <!-- Submit -->
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary btn-lg">
-          <i class="bi bi-person-plus me-1"></i> Add Student
-        </button>
-      </div>
-    </form>
+        <!-- Submit -->
+        <div class="d-grid">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="bi bi-person-plus me-1"></i> Add Student
+          </button>
+        </div>
+      </form>
+    </div>
 
     <!-- Footer -->
-    <p class="text-center mt-4 small text-light mb-0">
+    <div class="card-footer text-center small text-muted">
       &copy; <?= $year ?> Petroleum Training Institute
-    </p>
+    </div>
   </div>
 </div>
-
 <!-- Toasts -->
 <?php if (isset($_SESSION['flash_success'])): ?>
   <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
@@ -400,15 +372,7 @@ echo '</table></div></div>';}
 <?php endif; ?>
 <?php } ?>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const successToast = document.getElementById("successToast");
-    const errorToast   = document.getElementById("errorToast");
 
-    if (successToast) new bootstrap.Toast(successToast).show();
-    if (errorToast) new bootstrap.Toast(errorToast).show();
-  });
-</script>
 
 <script>
   // validation
@@ -710,10 +674,6 @@ document.addEventListener("DOMContentLoaded", function() {
 <?php
 if (@$_GET['q'] == 6) {
 
-    // Optional: restrict to admins only
-    if (!isset($isAdmin) || !$isAdmin) {
-        echo '<div class="main-content-spaced"><div class="card shadow-sm mb-4"><div class="card-body"><div class="alert alert-danger">Access denied. You do not have permission to view this page.</div></div></div></div>';
-    } else {
 
         // Fetch completed attempts with just the fields we need
         $sql = "
@@ -780,9 +740,9 @@ if (@$_GET['q'] == 6) {
                         <td>' . $dateStr . '</td>
                       </tr>';
             }
-        } else {
+           } else {
             echo '<tr><td colspan="6" class="text-center">No completed results found.</td></tr>';
-        }
+        
 
         echo '          </tbody>
                     </table>
@@ -1410,8 +1370,6 @@ document.addEventListener('click', function (e) {
   feedbackModal.show();
 });
 </script>
-
-
 
 </body>
 </html>

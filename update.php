@@ -356,19 +356,24 @@ if (@$_GET['q'] == 'addstudent' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $hashed = password_hash($password, PASSWORD_BCRYPT);
+    // ❌ before: password_hash
+    // ✅ now use md5 to match login.php
+    $hashed = md5($password);
 
     $sql = "INSERT INTO user (name, mob, email, password, gender) 
             VALUES ('$name', '$mob', '$email', '$hashed', '$gender')";
     if (mysqli_query($con, $sql)) {
-    $_SESSION['flash_success'] = "Account registered successfully.";
-} else {
-    $_SESSION['flash_error'] = "Error: " . mysqli_error($con);
+        $_SESSION['flash_success'] = "Account registered successfully.";
+         header("Location: dash.php?q=1"); // ✅ redirect to students page
+    } else {
+        $_SESSION['flash_error'] = "Error: " . mysqli_error($con);
+        header("Location: dash.php?q=7"); // keep them on the form if error
+    }
+    header("Location: dash.php?q=7");
+    exit;
 }
-header("Location: dash.php?q=7");
-exit;
 
-}
+
 
 
 
